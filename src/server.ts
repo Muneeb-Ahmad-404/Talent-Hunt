@@ -1,6 +1,7 @@
-import app from "./app";
+import app from './app';
+import { config } from './shared/config';
 
-const PORT: number = 3000;
+const port = config.PORT;
 
 const startServer = (port: number): void => {
   app.listen(port, (): void => {
@@ -8,4 +9,4 @@ const startServer = (port: number): void => {
   });
 };
 
-startServer(PORT);
+startServer(port);
