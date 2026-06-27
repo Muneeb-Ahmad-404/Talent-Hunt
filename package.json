@@ -7,13 +7,17 @@
     "dev": "tsx watch src/server.ts",
     "build": "tsc",
     "start": "node dist/server.js",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "migrate": "tsx --env-file=.env node_modules/node-pg-migrate/bin/node-pg-migrate up",
+    "migrate:down": "tsx --env-file=.env node_modules/node-pg-migrate/bin/node-pg-migrate down 1",
+    "migrate:create": "tsx --env-file=.env node_modules/node-pg-migrate/bin/node-pg-migrate create --migration-file-language ts"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "devDependencies": {
     "@types/node": "^26.0.0",
+    "node-pg-migrate": "^8.0.4",
     "tsx": "^4.22.4",
     "typescript": "^6.0.3"
   },
