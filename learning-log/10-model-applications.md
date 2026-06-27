@@ -8,8 +8,8 @@ Here is your revised text formatted cleanly into Markdown.
 ```sql
 CREATE TABLE applications (
   id                uuid        PRIMARY KEY DEFAULT gen_random_uuid(),
-  job_id            uuid        NOT NULL REFERENCES jobs(id),
-  applicant_id      uuid        NOT NULL REFERENCES applicants(id),
+  job_id            uuid        NOT NULL REFERENCES jobs(id) ON DELETE RESTRICT,
+  applicant_id      uuid        NOT NULL REFERENCES applicants(id) ON DELETE RESTRICT,
   stage             text        NOT NULL DEFAULT 'applied'
                                   CHECK (stage IN (
                                     'applied', 'screening', 'interview',

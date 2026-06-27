@@ -10,6 +10,42 @@
 | | `suspended` | `attributes` | | |
 
 ---
+```sql
+CREATE TABLE companies (
+  id         uuid    PRIMARY KEY DEFAULT gen_random_uuid(),
+  name       text    NOT NULL,
+  slug       text    NOT NULL UNIQUE,   -- URL-friendly: 'acme-corp', 'nova-labs'
+  website    text,
+  verified   boolean NOT NULL DEFAULT false,
+  suspended  boolean NOT NULL DEFAULT false,
+  created_at timestamptz NOT NULL DEFAULT now()
+);
+
+CREATE TABLE recruiters (
+  id           uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id      uuid NOT NULL UNIQUE REFERENCES users(id) ON DELETE CASCADE,
+  company_id   uuid NOT NULL REFERENCES companies(id),
+  company_role text NOT NULL DEFAULT 'recruiter'
+                 CHECK (company_role IN ('owner', 'hr_manager', 'recruiter', 'hiring_manager')),
+  created_at   timestamptz NOT NULL DEFAULT now()
+);
+
+CREATE TABLE applicants (
+  id         uuid  PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id    uuid  NOT NULL UNIQUE REFERENCES users(id) ON DELETE CASCADE,
+  full_name  text  NOT NULL,
+  headline   text,
+  location   text,
+  attributes jsonb NOT NULL DEFAULT '{}',
+  created_at timestamptz NOT NULL DEFAULT now()
+);
+
+CREATE TABLE admins (
+  id         uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id    uuid NOT NULL UNIQUE REFERENCES users(id) ON DELETE CASCADE,
+  created_at timestamptz NOT NULL DEFAULT now()
+);
+```
 
 ### (1) A teammate proposes a single users table with nullable company_id, full_name, and headline columns — everything in one place. What is the specific schema-level problem? (Think: what does full_name = NULL on a recruiter row mean to the database's ability to enforce correctness?)
 It would result in too much redundant and cluttered data, as fields that are not common across roles would sit as NULL values for records that do not use them, forcing the application to manually parse and type-narrow the data every time. 
