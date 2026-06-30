@@ -10,21 +10,26 @@
     "typecheck": "tsc --noEmit",
     "migrate": "tsx --env-file=.env node_modules/node-pg-migrate/bin/node-pg-migrate up",
     "migrate:down": "tsx --env-file=.env node_modules/node-pg-migrate/bin/node-pg-migrate down 1",
-    "migrate:create": "tsx --env-file=.env node_modules/node-pg-migrate/bin/node-pg-migrate create --migration-file-language ts"
+    "migrate:create": "tsx --env-file=.env node_modules/node-pg-migrate/bin/node-pg-migrate create --migration-file-language ts",
+    "seed": "tsx scripts/seed.ts"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "@types/bcryptjs": "^2.4.6",
     "@types/node": "^26.0.0",
+    "@types/pg": "^8.20.0",
     "node-pg-migrate": "^8.0.4",
     "tsx": "^4.22.4",
     "typescript": "^6.0.3"
   },
   "dependencies": {
     "@prisma/client": "^7.8.0",
+    "bcryptjs": "^3.0.3",
     "express": "^5.2.1",
     "ioredis": "^5.11.1",
+    "pg": "^8.22.0",
     "zod": "^4.4.3"
   }
 }
