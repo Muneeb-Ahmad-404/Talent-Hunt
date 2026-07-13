@@ -5,7 +5,7 @@ try{
     process.loadEnvFile();
 }
 catch(err){
-    console.error(err.message);
+    console.error((err as Error).message);
 }
 
 // (1) VALIDATE — declare every variable the app needs, and its rules.
