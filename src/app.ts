@@ -3,6 +3,7 @@ import { errorHandler } from "./shared/error-handler";
 import { NotFoundError } from './shared/errors';
 import { ValidationError } from './shared/validate';
 import { z } from 'zod';
+import { authRouter } from "./modules/auth/auth.routes";
 
 const app: Application = express();
 
@@ -38,6 +39,8 @@ app.get('/health', async (_req: Request, res: Response) => {
 // app.get('/test/unhandled', (_req, _res, next) => {
 //   next(new Error('oops — raw error'));
 // });
+
+app.use('/auth', authRouter);
 
 app.use(errorHandler);
 
