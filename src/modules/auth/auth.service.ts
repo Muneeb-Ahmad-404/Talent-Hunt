@@ -2,6 +2,7 @@ import { hashPassword, verifyPassword } from '../../shared/password';
 import { ConflictError, UnauthorizedError } from '../../shared/errors';
 import { findUserByEmail, createUser } from './auth.repo';
 import type { RegisterInput, LoginInput } from './auth.schema';
+import { signAccessToken } from '../../shared/token';
 
 // A pre-computed bcrypt hash of a throwaway string.
 // Used in the login path when no user is found, so the timing cost of
@@ -22,17 +23,10 @@ export async function register(
   return createUser(input.email, passwordHash, input.role);
 }
 
-export async function login(
-  input: LoginInput,
-): Promise<{ id: string; email: string; role: string }> {
+export async function login(input: LoginInput,): Promise<{ id: string; email: string; role: string; accessToken: string }> {
   const user = await findUserByEmail(input.email);
 
   if (!user) {
-    // Always call verifyPassword, even with a dummy hash.
-    // Without this call, a timing oracle exists: no-user paths return in ~0ms,
-    // found-but-wrong-password paths return in ~250ms. An attacker measuring
-    // response times can determine which emails are registered despite receiving
-    // the same error message in both cases.
     await verifyPassword(input.password, DUMMY_HASH);
     throw new UnauthorizedError('Invalid credentials');
   }
@@ -46,7 +40,7 @@ export async function login(
     throw new UnauthorizedError('Invalid credentials');
   }
 
-  // Chapter 21 adds token issuance here.
-  // The return value expands to { id, email, role, accessToken }.
-  return { id: user.id, email: user.email, role: user.role };
+  const accessToken = signAccessToken({ sub: user.id, role: user.role });
+
+  return { id: user.id, email: user.email, role: user.role, accessToken };
 }

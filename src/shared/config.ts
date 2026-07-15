@@ -1,4 +1,3 @@
-// src/shared/config.ts — the ONLY place in the app that reads process.env
 import { z } from 'zod';
 
 try{
@@ -12,9 +11,10 @@ catch(err){
 const EnvSchema = z.object({
   NODE_ENV:     z.enum(['development', 'test', 'production']).default('development'),
   PORT:         z.coerce.number().int().positive().default(3000),  // (3) COERCE: "3000" → 3000
-  DATABASE_URL: z.string().url(),                                  // required; secrets get no default
-  REDIS_URL:    z.string().url(),
+  DATABASE_URL: z.url(),                                  // required; secrets get no default
+  REDIS_URL:    z.url(),
   JWT_SECRET:   z.string().min(32),                               // required AND long enough to be safe
+  JWT_EXPIRES_IN: z.string().default('15m'),
 });
 
 // Validate the WHOLE environment once, here, at startup.
