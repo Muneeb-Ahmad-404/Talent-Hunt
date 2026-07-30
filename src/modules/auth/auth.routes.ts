@@ -16,6 +16,8 @@ import {
   verifyEmail, 
   resendVerification
 } from './auth.service';
+import { authMiddleware } from '../../shared/auth-middleware';
+import { requireRole } from '../../shared/require-role';
 
 const router = Router();
 
