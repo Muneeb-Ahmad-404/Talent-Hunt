@@ -21,5 +21,14 @@ export const logoutSchema = z.object({
   refreshToken: z.string().min(1),
 });
 
+export const verifyEmailSchema = z.object({
+  email: z.email(),
+  otp:   z.string().length(6).regex(/^\d{6}$/),
+});
+
+export const resendVerificationSchema = z.object({
+  email: z.email(),
+});
+
 export type RegisterInput = z.infer<typeof registerSchema>;
 export type LoginInput    = z.infer<typeof loginSchema>;
