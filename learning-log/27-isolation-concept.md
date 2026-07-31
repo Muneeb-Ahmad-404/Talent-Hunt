@@ -1,0 +1,7 @@
+The isolation rule says company_id must come from the database, not from the request. But what about a platform feature that genuinely needs the recruiter to specify a company — for example, a "switch company" feature where a user can belong to multiple companies? How would you extend the model to support this without violating the isolation rule?
+
+What we can do is add a table for active company sessions that link user ids to company ids for whom the session is active. When a switch request is made the userid is verified against the company and if the id is part of the company then the operation is completed and a session is created - removing or terminating the previous one. As the data base verifies membership before switching the user can not switch to a company it does not belong to.
+
+An admin accidentally writes a route that includes WHERE company_id = $1 scoped to the admin's own company_id. The route is in admin.routes.ts and passes requireRole('admin'). What is wrong with this route, and why does the bug make the admin's cross-company access no longer function correctly?
+
+The admin route needs to have access across all the companies so if that company_id check is applied to the admin it no longer can access other companies route and will return an unauthorzied error. 
