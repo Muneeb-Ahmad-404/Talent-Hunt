@@ -4,6 +4,7 @@ import { authRouter } from "./modules/auth/auth.routes";
 import { applicantsRouter } from "./modules/applicants/applicants.routes";
 import { adminRouter } from "./modules/admin/admin.routes";
 import { companiesRouter } from "./modules/companies/companies.routes";
+import { jobsRouter } from "./modules/jobs/jobs.service";
 
 const app: Application = express();
 
@@ -26,6 +27,7 @@ app.use('/api/auth', authRouter);
 app.use('/api/companies', companiesRouter);
 app.use('/api/applicants', applicantsRouter);
 app.use('/api/admin', adminRouter);
+app.use('/api/jobs', jobsRouter)
 
 app.use(errorHandler);
 
