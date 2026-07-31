@@ -1,0 +1,7 @@
+A teammate argues that combining authentication and authorization into a single middleware — one function that both verifies the token and checks the role — would reduce boilerplate in route files. Every protected route would only need one middleware call instead of two. What does this gain? What does it cost in flexibility and clarity? Would you accept this design for this system?
+
+With a singular middleware there is no way to seperate the routes that only need authentication and authorization from those that need both. Coupling them together can also cuz problems with error codes as both 401 and 403 deliver different meaning but here these can be confused or make tests difficult.
+
+An applicant's token is valid and not expired. They call a recruiter-only route and receive 403. They immediately log out and log back in. Their new token still carries role: 'applicant'. They call the same route and receive 403 again. From a UX perspective, what should the client display — and what should it not do?
+
+The error should be delivered with a clear message and a login route should not be provided to inform the user that its not the issue with identifying you but rather your role is not allowed to access the specific resource.
