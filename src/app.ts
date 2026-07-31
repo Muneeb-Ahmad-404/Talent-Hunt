@@ -1,6 +1,9 @@
 import express, {Application, Request, Response} from "express";
 import { errorHandler } from "./shared/error-handler";
 import { authRouter } from "./modules/auth/auth.routes";
+import { applicantsRouter } from "./modules/applicants/applicants.routes";
+import { adminRouter } from "./modules/admin/admin.routes";
+import { companiesRouter } from "./modules/companies/companies.routes";
 
 const app: Application = express();
 
@@ -19,7 +22,10 @@ app.get('/health', async (_req: Request, res: Response) => {
   });
 });
 
-app.use('/auth', authRouter);
+app.use('/api/auth', authRouter);
+app.use('/api/companies', companiesRouter);
+app.use('/api/applicants', applicantsRouter);
+app.use('/api/admin', adminRouter);
 
 app.use(errorHandler);
 
