@@ -1,4 +1,6 @@
+import { v4 as uuid } from 'uuid';
 import { db } from '../../shared/db';
+import type { CreateCompanyInput } from './companies.schema';
 
 export interface RecruiterCompany {
   companyId: string;
@@ -49,4 +51,32 @@ export async function getCompanyById(companyId: string): Promise<Company | null>
   }
 
   return result.rows[0];
+}
+
+export async function createCompany(
+  userId: string,
+  input: CreateCompanyInput,
+): Promise<{ companyId: string; name: string }> {
+  const companyId = uuid();
+  const recruiterId = uuid();
+
+  await db.query('BEGIN');
+  try {
+    await db.query(
+      `INSERT INTO companies (id, name, website, slug, verified)
+       VALUES ($1, $2, $3, $4, false)`,
+      [companyId, input.name, input.website ?? null, input.slug ?? null],
+    );
+    await db.query(
+      `INSERT INTO recruiters (id, user_id, company_id, company_role, created_at)
+       VALUES ($1, $2, $3, 'owner', NOW())`,
+      [recruiterId, userId, companyId],
+    );
+    await db.query('COMMIT');
+  } catch (err) {
+    await db.query('ROLLBACK');
+    throw err;
+  }
+
+  return { companyId, name: input.name };
 }
