@@ -31,3 +31,12 @@ export async function sendVerificationEmail(to: string, otp: string): Promise<vo
     ].join('\n'),
   });
 }
+
+export async function sendInvitationEmail(toEmail: string, rawToken: string) {
+  const link = `${config.APP_BASE_URL}/auth/accept-invitation?token=${rawToken}`;
+  await transporter.sendMail({
+    to: toEmail,
+    subject: 'You have been invited to join a company workspace',
+    text: `You have been invited to join a company workspace. Accept your invitation here:\n\n${link}\n\nThis link expires in ${config.INVITATION_EXPIRES_IN_HOURS} hours.`,
+  });
+}
