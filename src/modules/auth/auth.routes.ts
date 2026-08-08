@@ -16,6 +16,8 @@ import {
   verifyEmail, 
   resendVerification
 } from './auth.service';
+import { acceptInvitationSchema } from './auth.schema';
+import { acceptInvitation } from './auth.service';
 import { authMiddleware } from '../../shared/auth-middleware';
 import { requireRole } from '../../shared/require-role';
 
@@ -80,5 +82,16 @@ router.post('/resend-verification', async (req, res, next) => {
     next(err);
   }
 });
+
+router.post('/accept-invitation', async (req, res, next) => {
+  try {
+    const input = validateBody(acceptInvitationSchema, req.body);
+    const tokens = await acceptInvitation(input);
+    res.status(200).json(tokens);
+  } catch (err) {
+    next(err);
+  }
+});
+
 
 export { router as authRouter };

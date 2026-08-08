@@ -1,6 +1,7 @@
+import { generateOtp, hashOtp } from '../../shared/otp';
+import { sendVerificationEmail } from '../../shared/mailer';
 import { hashPassword, verifyPassword } from '../../shared/password';
-import { ConflictError, UnauthorizedError } from '../../shared/errors';
-import { findUserByEmail, createUser } from './auth.repo';
+import { ConflictError, UnauthorizedError, ForbiddenError, BadRequestError } from '../../shared/errors';
 import type { RegisterInput, LoginInput } from './auth.schema';
 import { signAccessToken } from '../../shared/token';
 import crypto from 'node:crypto';
@@ -11,16 +12,25 @@ import {
   deleteRefreshTokenByHash,
   deleteAllRefreshTokensForUser,
   findUserById,
+  createUser
 } from './auth.repo';
 
-import { generateOtp, hashOtp } from '../../shared/otp';
-import { sendVerificationEmail } from '../../shared/mailer';
 import {
   createEmailVerification,
   findEmailVerification,
   deleteEmailVerificationsForUser,
   activateUser,
 } from './auth.repo';
+
+import {
+  findInvitationByToken,
+  findUserByEmail,
+  createVerifiedUser,
+  createRecruiterRow,
+  deleteInvitation,
+} from './auth.repo';
+import type { AcceptInvitationInput } from './auth.schema';
+import bcrypt from 'bcryptjs';
 
 const DUMMY_HASH =
   '$2b$12$EixZaYVK1fsbw1ZfbX3OXePaWxn96p36zLklGLsR9XFKQZ5kQlbri';
@@ -170,4 +180,45 @@ export async function resendVerification(email: string): Promise<void> {
 
   await createEmailVerification(user.id, otpHash, expiresAt);
   await sendVerificationEmail(email, otp);
+}
+
+export async function acceptInvitation(input: AcceptInvitationInput) {
+  const invitation = await findInvitationByToken(input.token);
+  if (!invitation) {
+    console.log('invitation')
+    throw new BadRequestError('Invalid or expired invitation token.');
+  }
+
+  if (invitation.email.toLowerCase() !== input.email.toLowerCase()) {
+    console.log('wrong email')
+    throw new BadRequestError('Invalid or expired invitation token.');
+  }
+
+  let userId: string;
+  let userRole: 'recruiter' | 'admin' | 'applicant';
+
+  const existingUser = await findUserByEmail(input.email);
+
+  if (existingUser) {
+    if (existingUser.status !== 'active') {
+      throw new ForbiddenError('Your account is not active.');
+    }
+    userId = existingUser.id;
+    userRole = existingUser.role;
+  } else {
+    if (!input.password) {
+      console.log('password')
+      throw new BadRequestError('Password is required to create a new account.');
+    }
+    const passwordHash = await bcrypt.hash(input.password, 12);
+    userId = await createVerifiedUser(input.email, passwordHash);
+    userRole = 'recruiter';
+  }
+
+  await createRecruiterRow(userId, invitation.companyId, invitation.role);
+
+  await deleteInvitation(invitation.id);
+
+  return issueTokenPair(userId, userRole);
+
 }

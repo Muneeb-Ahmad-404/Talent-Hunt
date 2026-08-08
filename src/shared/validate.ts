@@ -25,4 +25,4 @@ export function validateParam<T>(schema: ZodType<T>, data: unknown): T {
   return result.data;
 }
 
-export const uuidParam = z.string().uuid({ message: 'Invalid ID format' });
+export const uuidParam = z.uuid({ message: 'Invalid ID format' });
