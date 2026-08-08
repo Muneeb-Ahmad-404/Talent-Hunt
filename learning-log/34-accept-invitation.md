@@ -1,0 +1,8 @@
+The service deletes the invitation row after creating the recruiter row, but these two operations are not wrapped in a transaction. Describe the failure scenario that arises if the process crashes between the two steps. What constraint would you add to the database to make a repeated acceptance idempotent rather than destructive?
+
+A failure mid transaction can result in a stale invitation, and this would remain as junk in the database which could later be cleaned up with specific direct queries.
+We can add a check in system that if a recruiter row exist and is already associated with the company too then we will just display a 201 message to keep it simple, And at the database level add a unique constraint to the invitations. 
+
+The error messages for "token not found," "token expired," and "email mismatch" are all identical: "Invalid or expired invitation token." A developer argues that users deserve more specific error messages so they know whether to request a new invitation versus check their email address. Evaluate the security argument for uniform messages against the usability argument for specific messages. What is your recommendation?
+
+We need to look for our user base but alongside that we have to have a layer of abstraction to prevent exploitation attempts as well. Uniform messages does not reveal anything to the end user and the case is similar for an attacker. I would suggest going with the same message, user can try to go through the same process again.
