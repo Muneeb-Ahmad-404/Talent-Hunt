@@ -185,12 +185,10 @@ export async function resendVerification(email: string): Promise<void> {
 export async function acceptInvitation(input: AcceptInvitationInput) {
   const invitation = await findInvitationByToken(input.token);
   if (!invitation) {
-    console.log('invitation')
     throw new BadRequestError('Invalid or expired invitation token.');
   }
 
   if (invitation.email.toLowerCase() !== input.email.toLowerCase()) {
-    console.log('wrong email')
     throw new BadRequestError('Invalid or expired invitation token.');
   }
 
@@ -207,7 +205,6 @@ export async function acceptInvitation(input: AcceptInvitationInput) {
     userRole = existingUser.role;
   } else {
     if (!input.password) {
-      console.log('password')
       throw new BadRequestError('Password is required to create a new account.');
     }
     const passwordHash = await bcrypt.hash(input.password, 12);
