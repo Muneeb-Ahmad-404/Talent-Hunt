@@ -111,5 +111,9 @@ export async function deleteMember(userId: string, recruiterId: string) {
     throw new ForbiddenError('You cannot remove yourself from the company.');
   }
 
+  if(member.companyRole === "owner"){
+    throw new ForbiddenError('You cannot remove the company owner');
+  }
+
   await removeMember(recruiterId, company.companyId);
 }
