@@ -5,12 +5,16 @@ const screeningQuestionInputSchema = z.object({
   type:     z.enum(['text', 'boolean', 'url']),
   required: z.boolean().default(true),
 });
-
 const jobFieldsSchema = z.object({
   title:               z.string().min(1, 'Title is required').max(200),
   description:         z.string().min(1, 'Description is required').max(100_000),
-  status:              z.enum(['draft', 'open']),
-  deadline:            z.string().date('Deadline must be a date in YYYY-MM-DD format').optional(),
+  deadline:            z.date('Deadline must be a date in YYYY-MM-DD format').optional(),
+  
+  location:            z.string().optional(),
+  employment_type:     z.enum(['full_time', 'part_time', 'contract', 'internship']).optional(),
+  salary_min:          z.number().positive().optional(),
+  salary_max:          z.number().positive().optional(),
+  
   attributes:          z.object({}).catchall(z.unknown()),
   screening_questions: z.array(screeningQuestionInputSchema),
 });
