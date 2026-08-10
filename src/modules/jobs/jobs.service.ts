@@ -1,29 +1,53 @@
-import { Router } from 'express';
-import { authMiddleware } from '../../shared/auth-middleware';
-import { requireRole } from '../../shared/require-role';
+import { ForbiddenError } from '../../shared/errors';
 import { getRecruiterCompany } from '../companies/companies.repo';
-import { assertJobOwnership } from './jobs.repo';
-import { NotFoundError } from '../../shared/errors';
+import { assertCompanyRole } from '../companies/companies.service';
+import { assertJobOwnership, createJob, updateJob, setJobStatus } from './jobs.repo';
+import type { CreateJobInput } from './jobs.schema';
 
-const router = Router();
+const JOB_POSTERS = ['owner', 'hr_manager', 'recruiter'] as const;
 
-router.use(authMiddleware, requireRole('recruiter'));
+export async function postJob(userId: string, input: CreateJobInput) {
+  const company = await getRecruiterCompany(userId);
+  if (!company) throw new ForbiddenError('No company workspace found.');
 
-router.get('/:id', async (req, res, next) => {
-  try {
-    const recruiter = await getRecruiterCompany(req.user!.userId);
+  assertCompanyRole(company.companyRole, [...JOB_POSTERS]);
 
-    if (!recruiter) {
-      return next(new NotFoundError('No company associated with this account'));
-    }
+  const jobId = await createJob(company.companyId, input);
+  return { jobId };
+}
 
-    await assertJobOwnership(req.params.id, recruiter.companyId);
-  
-    res.json({ jobId: req.params.id, companyId: recruiter.companyId });
-    
-  } catch (err) {
-    next(err);
-  }
-});
+export async function editJob(
+  userId: string,
+  jobId: string,
+  input: Partial<CreateJobInput>,
+) {
+  const company = await getRecruiterCompany(userId);
+  if (!company) throw new ForbiddenError('No company workspace found.');
 
-export { router as jobsRouter };
+  assertCompanyRole(company.companyRole, [...JOB_POSTERS]);
+
+  // Confirm the job belongs to this company (throws NotFoundError if not)
+  await assertJobOwnership(jobId, company.companyId);
+
+  await updateJob(jobId, company.companyId, input);
+}
+
+export async function publishJob(userId: string, jobId: string) {
+  const company = await getRecruiterCompany(userId);
+  if (!company) throw new ForbiddenError('No company workspace found.');
+
+  assertCompanyRole(company.companyRole, [...JOB_POSTERS]);
+
+  await assertJobOwnership(jobId, company.companyId);
+  await setJobStatus(jobId, company.companyId, 'open');
+}
+
+export async function closeJob(userId: string, jobId: string) {
+  const company = await getRecruiterCompany(userId);
+  if (!company) throw new ForbiddenError('No company workspace found.');
+
+  assertCompanyRole(company.companyRole, [...JOB_POSTERS]);
+
+  await assertJobOwnership(jobId, company.companyId);
+  await setJobStatus(jobId, company.companyId, 'closed');
+}

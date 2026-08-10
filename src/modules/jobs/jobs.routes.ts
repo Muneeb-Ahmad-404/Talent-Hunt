@@ -1,0 +1,73 @@
+import { Router } from "express";
+import { validateBody } from "../../shared/validate";
+import { createJobSchema } from "./jobs.schema";
+import { closeJob, editJob, postJob, publishJob } from "./jobs.service";
+import { authMiddleware } from "../../shared/auth-middleware";
+import { requireRole } from "../../shared/require-role";
+import { getRecruiterCompany } from "../companies/companies.repo";
+import { NotFoundError } from "../../shared/errors";
+import { assertJobOwnership } from "./jobs.repo";
+
+const router = Router()
+
+router.use(authMiddleware, requireRole('recruiter'));
+
+router.get('/:id', async (req, res, next) => {
+  try {
+    const recruiter = await getRecruiterCompany(req.user!.userId);
+
+    if (!recruiter) {
+      return next(new NotFoundError('No company associated with this account'));
+    }
+
+    await assertJobOwnership(req.params.id, recruiter.companyId);
+  
+    res.json({ jobId: req.params.id, companyId: recruiter.companyId });
+    
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.post('/', async (req, res, next) => {
+  try {
+    const input = validateBody(createJobSchema, req.body);
+    console.log("1")
+    const result = await postJob(req.user!.userId, input);
+    console.log("2")
+    res.status(201).json(result);
+    console.log("3")
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.patch('/:id', async (req, res, next) => {
+  try {
+    const input = validateBody(createJobSchema.partial(), req.body);
+    await editJob(req.user!.userId, req.params.id, input);
+    res.json({ message: 'Job updated.' });
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.post('/:id/publish', async (req, res, next) => {
+  try {
+    await publishJob(req.user!.userId, req.params.id);
+    res.json({ message: 'Job published.' });
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.post('/:id/close', async (req, res, next) => {
+  try {
+    await closeJob(req.user!.userId, req.params.id);
+    res.json({ message: 'Job closed.' });
+  } catch (err) {
+    next(err);
+  }
+});
+
+export { router as jobsRouter };

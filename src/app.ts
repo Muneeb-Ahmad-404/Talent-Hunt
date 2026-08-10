@@ -4,7 +4,7 @@ import { authRouter } from "./modules/auth/auth.routes";
 import { applicantsRouter } from "./modules/applicants/applicants.routes";
 import { adminRouter } from "./modules/admin/admin.routes";
 import { companiesRouter } from "./modules/companies/companies.routes";
-import { jobsRouter } from "./modules/jobs/jobs.service";
+import { jobsRouter } from "./modules/jobs/jobs.routes";
 
 const app: Application = express();
 
