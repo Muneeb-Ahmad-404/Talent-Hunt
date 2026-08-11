@@ -1,8 +1,8 @@
 import { db } from '../../shared/db';
 import { NotFoundError } from '../../shared/errors';
 import { v4 as uuid } from 'uuid';
-import { CreateJobInput } from './jobs.schema';
-
+import { CreateJobInput, ListCompanyJobsInput } from './jobs.schema';
+import { decodeCursor } from '../../shared/cursor';
 
 // ISOLATION RULE: Every company-scoped query must include company_id from
 // the authenticated recruiter row (resolved via getRecruiterCompany), never
@@ -98,4 +98,42 @@ export async function setJobStatus(
      WHERE id = $2 AND company_id = $3`,
     [status, jobId, companyId],
   );
+}
+
+export async function listJobsForCompany(
+  companyId: string,
+  input: ListCompanyJobsInput,
+): Promise<Array<{ id: string; title: string; status: string; createdAt: string }>> {
+  const params: unknown[] = [companyId];
+  const conditions: string[] = ['company_id = $1'];
+  let idx = 2;
+
+  if (input.status) {
+    conditions.push(`status = $${idx}`);
+    params.push(input.status);
+    idx++;
+  }
+
+  if (input.cursor) {
+    const decoded = decodeCursor(input.cursor);
+    if (decoded) {
+      conditions.push(`(created_at, id) < ($${idx}::timestamptz, $${idx + 1})`);
+      params.push(decoded.createdAt, decoded.id);
+      idx += 2;
+    }
+    // If cursor is malformed, ignore it and return from the start
+  }
+
+  params.push(input.limit + 1); // fetch one extra to detect if there is a next page
+
+  const result = await db.query(
+    `SELECT id, title, status, created_at AS "createdAt"
+     FROM jobs
+     WHERE ${conditions.join(' AND ')}
+     ORDER BY created_at DESC, id DESC
+     LIMIT $${idx}`,
+    params,
+  );
+
+  return result.rows;
 }

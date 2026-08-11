@@ -1,8 +1,9 @@
+import { encodeCursor } from '../../shared/cursor';
 import { ForbiddenError } from '../../shared/errors';
 import { getRecruiterCompany } from '../companies/companies.repo';
 import { assertCompanyRole } from '../companies/companies.service';
-import { assertJobOwnership, createJob, updateJob, setJobStatus } from './jobs.repo';
-import type { CreateJobInput } from './jobs.schema';
+import { assertJobOwnership, createJob, updateJob, setJobStatus, listJobsForCompany } from './jobs.repo';
+import type { CreateJobInput, ListCompanyJobsInput } from './jobs.schema';
 
 const JOB_POSTERS = ['owner', 'hr_manager', 'recruiter'] as const;
 
@@ -50,4 +51,21 @@ export async function closeJob(userId: string, jobId: string) {
 
   await assertJobOwnership(jobId, company.companyId);
   await setJobStatus(jobId, company.companyId, 'closed');
+}
+
+export async function getCompanyJobs(userId: string, input: ListCompanyJobsInput) {
+  const company = await getRecruiterCompany(userId);
+  if (!company) throw new ForbiddenError('No company workspace found.');
+
+  const rows = await listJobsForCompany(company.companyId, input);
+
+  const hasNextPage = rows.length > input.limit;
+  const items = hasNextPage ? rows.slice(0, input.limit) : rows;
+
+  const nextCursor =
+    hasNextPage && items.length > 0
+      ? encodeCursor(items[items.length - 1].createdAt, items[items.length - 1].id)
+      : null;
+
+  return { jobs: items, nextCursor };
 }

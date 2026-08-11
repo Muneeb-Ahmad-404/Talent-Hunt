@@ -1,7 +1,7 @@
 import { Router } from "express";
-import { validateBody } from "../../shared/validate";
-import { createJobSchema } from "./jobs.schema";
-import { closeJob, editJob, postJob, publishJob } from "./jobs.service";
+import { validateBody, validateQuery } from "../../shared/validate";
+import { createJobSchema, listCompanyJobsSchema } from "./jobs.schema";
+import { closeJob, editJob, getCompanyJobs, postJob, publishJob } from "./jobs.service";
 import { authMiddleware } from "../../shared/auth-middleware";
 import { requireRole } from "../../shared/require-role";
 import { getRecruiterCompany } from "../companies/companies.repo";
@@ -65,6 +65,16 @@ router.post('/:id/close', async (req, res, next) => {
   try {
     await closeJob(req.user!.userId, req.params.id);
     res.json({ message: 'Job closed.' });
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.get('/', async (req, res, next) => {
+  try {
+    const input = validateQuery(listCompanyJobsSchema, req.query);
+    const result = await getCompanyJobs(req.user!.userId, input);
+    res.json(result);
   } catch (err) {
     next(err);
   }

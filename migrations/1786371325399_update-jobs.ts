@@ -10,7 +10,14 @@ export async function up(pgm: MigrationBuilder): Promise<void> {
     -- Add check constraint for employment_type
     ALTER TABLE jobs ADD CONSTRAINT jobs_employment_type_check 
       CHECK (employment_type IN ('full_time', 'part_time', 'contract', 'internship'));
-  `);
+
+    -- Add idx on created_at DESC and id DESC  
+    CREATE INDEX IF NOT EXISTS jobs_company_created_idx
+      ON jobs (company_id, created_at DESC, id DESC);
+    
+    ALTER TABLE jobs ALTER COLUMN description DROP NOT NULL;    
+    `);
+
 }
 
 export async function down(pgm: MigrationBuilder): Promise<void> {
