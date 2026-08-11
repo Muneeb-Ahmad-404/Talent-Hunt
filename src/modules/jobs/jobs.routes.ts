@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { validateBody, validateQuery } from "../../shared/validate";
 import { createJobSchema, listCompanyJobsSchema } from "./jobs.schema";
-import { closeJob, editJob, getCompanyJobs, postJob, publishJob } from "./jobs.service";
+import { closeJob, editJob, getCompanyJobs, getJobDetails, postJob, publishJob } from "./jobs.service";
 import { authMiddleware } from "../../shared/auth-middleware";
 import { requireRole } from "../../shared/require-role";
 import { getRecruiterCompany } from "../companies/companies.repo";
@@ -19,10 +19,10 @@ router.get('/:id', async (req, res, next) => {
     if (!recruiter) {
       return next(new NotFoundError('No company associated with this account'));
     }
+    
+    const jobDetails = await getJobDetails(req.params.id, recruiter.companyId)
 
-    await assertJobOwnership(req.params.id, recruiter.companyId);
-  
-    res.json({ jobId: req.params.id, companyId: recruiter.companyId });
+    res.json(jobDetails);
     
   } catch (err) {
     next(err);

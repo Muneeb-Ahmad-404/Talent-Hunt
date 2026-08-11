@@ -23,6 +23,7 @@ export const createJobSchema = jobFieldsSchema.extend({
   status:              z.enum(['draft', 'open']).default('draft'),
   attributes:          z.object({}).catchall(z.unknown()).default({}),
   screening_questions: z.array(screeningQuestionInputSchema).default([]),
+  description:         z.string().min(1, 'Description is required').max(100_000).optional()
 });
 
 export const updateJobSchema = jobFieldsSchema.partial();

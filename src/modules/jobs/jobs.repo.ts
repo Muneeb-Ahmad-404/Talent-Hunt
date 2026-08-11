@@ -100,6 +100,32 @@ export async function setJobStatus(
   );
 }
 
+export async function getJob(
+  jobId: string,
+  companyId: string
+): Promise<void> {
+  const result = await db.query(
+    `SELECT 
+      id,
+      title, 
+      description, 
+      status, 
+      deadline, 
+      attributes, 
+      screening_questions, 
+      created_at AS "createdAt", 
+      updated_at AS "updatedAt", 
+      location, 
+      employment_type, 
+      salary_min, 
+      salary_max
+    FROM jobs 
+    WHERE id = $1 AND company_id = $2`,
+    [jobId, companyId]
+  );
+  return result.rows[0] || null;  // ← Return the data!
+}
+
 export async function listJobsForCompany(
   companyId: string,
   input: ListCompanyJobsInput,

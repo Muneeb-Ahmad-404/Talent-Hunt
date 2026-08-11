@@ -1,8 +1,8 @@
 import { encodeCursor } from '../../shared/cursor';
-import { ForbiddenError } from '../../shared/errors';
+import { ForbiddenError, NotFoundError } from '../../shared/errors';
 import { getRecruiterCompany } from '../companies/companies.repo';
 import { assertCompanyRole } from '../companies/companies.service';
-import { assertJobOwnership, createJob, updateJob, setJobStatus, listJobsForCompany } from './jobs.repo';
+import { assertJobOwnership, createJob, updateJob, setJobStatus, listJobsForCompany, getJob } from './jobs.repo';
 import type { CreateJobInput, ListCompanyJobsInput } from './jobs.schema';
 
 const JOB_POSTERS = ['owner', 'hr_manager', 'recruiter'] as const;
@@ -68,4 +68,13 @@ export async function getCompanyJobs(userId: string, input: ListCompanyJobsInput
       : null;
 
   return { jobs: items, nextCursor };
+}
+
+export async function getJobDetails(jobId: string, companyId: string) {
+
+  await assertJobOwnership(jobId, companyId);
+  
+  const job = await getJob(jobId, companyId);
+
+  return job;
 }
