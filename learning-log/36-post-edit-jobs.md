@@ -1,0 +1,9 @@
+The updateJob repo function builds a dynamic SQL SET clause from a whitelist of allowed column names. A developer suggests using an ORM's "patch" method instead, arguing it removes the need for the manual whitelist. What security and correctness guarantees does the whitelist provide that an ORM's generic patch might or might not preserve? What would you need to verify before trusting the ORM approach?
+
+The whitelist provides explicit column-level control, preventing mass assignment attacks where an attacker could inject unexpected fields like company_id or id into the request. It also forces intentional design every updatable field is declared and can have its own validation logic. An ORM's generic patch might update all fields blindly, potentially bypassing these safeguards. Before trusting the ORM approach, you would need to verify that it respects a whitelist, validates input types, prevents mass assignment, and supports custom per-field validation logic.
+
+---
+
+Jobs transition from draft → open → closed, but the current setJobStatus function accepts 'open' or 'closed' unconditionally and does not check the current status. Describe the business consequences of allowing invalid transitions (e.g., reopening a closed job, or closing a draft that was never published). Should these transitions be guarded? State your reasoning.
+
+Invalid transitions like closing a draft or reopening a closed job can cause business confusion a closed job might reappear on the job board, wasting applicants' time, or a company might think they posted a job when it was actually closed. These transitions should be guarded, but the flow should not be strictly one-way: draft → open → closed with the ability to reopen (closed → open) for legitimate business cases like rehiring for the same position. Guarding transitions ensures data integrity while supporting real-world needs.
