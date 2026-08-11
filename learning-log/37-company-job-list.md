@@ -1,0 +1,8 @@
+The cursor is silently ignored if it is malformed. A strict alternative would return 422. Describe a real-world scenario where a client might send a malformed cursor (not through malice, but through normal client behavior), and evaluate whether the silent recovery or the error response is more appropriate for that case.
+
+There are scenarios when a user bookmarks the tab with cursor in the link. Now the cursor is a snapshot in time if some job is deleted or a new job is added the cursor can become invalid. And these scenarios are gonna be pretty common with cursors. So if we display a strict error every time, the ux would get bad. The developer would have to handle edge cases gracefully. But recovering silently with start, throws out all these complexities.
+
+The composite index (company_id, created_at DESC, id DESC) is recommended to support this query. A colleague suggests a separate index on (created_at DESC, id DESC) without company_id, arguing the database will combine it with an existing index on company_id. Explain why the composite index is preferred over separate single-column indexes for this specific query pattern.
+
+Consider an example where there are 10000 jobs against the company_id in the database. Now a user queries with seperate indices first based on the company_id against it there are 10000 jobs now for the next index these 10000 jobs are filtered to 20 jobs and then sorted based on id and time. Now as it is evident this approach would take too much query time unnecessarily.
+On the contrary if we use a composite index the database-postgres returns us with sorted 20 jobs and it is a lot faster then the seperate indices.

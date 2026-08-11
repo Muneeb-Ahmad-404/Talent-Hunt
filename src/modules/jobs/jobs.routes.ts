@@ -32,11 +32,8 @@ router.get('/:id', async (req, res, next) => {
 router.post('/', async (req, res, next) => {
   try {
     const input = validateBody(createJobSchema, req.body);
-    console.log("1")
     const result = await postJob(req.user!.userId, input);
-    console.log("2")
     res.status(201).json(result);
-    console.log("3")
   } catch (err) {
     next(err);
   }
