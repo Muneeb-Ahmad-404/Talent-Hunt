@@ -5,14 +5,11 @@ import { applicantsRouter } from "./modules/applicants/applicants.routes";
 import { adminRouter } from "./modules/admin/admin.routes";
 import { companiesRouter } from "./modules/companies/companies.routes";
 import { jobsRouter } from "./modules/jobs/jobs.routes";
+import { publicRouter } from './modules/public/publicRouter';
 
 const app: Application = express();
 
 app.use(express.json());
-
-app.get("/jobs", (req: Request, res: Response)=>{
-    res.json({status: "ok"});
-});
 
 // ── Infrastructure ──────────────────────────────────────────────
 app.get('/health', async (_req: Request, res: Response) => {
@@ -22,6 +19,8 @@ app.get('/health', async (_req: Request, res: Response) => {
     timestamp: new Date().toISOString(),
   });
 });
+
+app.use('/api/public', publicRouter);
 
 app.use('/api/auth', authRouter);
 app.use('/api/companies', companiesRouter);
