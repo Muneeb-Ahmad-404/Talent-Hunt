@@ -2,6 +2,7 @@ import { Router, Request, Response } from 'express';
 import { z } from 'zod';
 import { validateQuery } from '../../shared/validate';
 import { getPublicJobs, getPublicJobById } from './publicService';
+import { getQueryCount, resetQueryCount } from '../../shared/db';
 
 export const publicRouter = Router();
 
@@ -16,8 +17,14 @@ const listQuerySchema = z.object({
 });
 
 publicRouter.get('/jobs', async (req: Request, res: Response) => {
+  resetQueryCount()
   const data = validateQuery(listQuerySchema, req.query)
   const result = await getPublicJobs(data);
+  res.on('finish', () => {
+    if (process.env.NODE_ENV !== 'production') {
+      console.log(`[${req.method} ${req.path}] queries: ${getQueryCount()}`);
+    }
+  });
   res.json(result);
 });
 

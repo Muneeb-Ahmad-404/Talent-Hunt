@@ -1,6 +1,10 @@
 import { Client } from "pg";
 
 let client: Client | null = null;
+let _queryCount = 0;
+
+export function resetQueryCount() { _queryCount = 0; }
+export function getQueryCount() { return _queryCount; }
 
 function getDbClient() {
   if (!client) {
@@ -12,5 +16,9 @@ function getDbClient() {
   return client;
 }
 
-export const db = getDbClient();
-
+export const db = {
+  query: async (text: string, params?: unknown[]) => {
+    _queryCount++;
+    return getDbClient().query(text, params);
+  },
+};
