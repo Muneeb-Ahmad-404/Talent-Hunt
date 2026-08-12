@@ -16,9 +16,4 @@ function getDbClient() {
   return client;
 }
 
-export const db = {
-  query: async (text: string, params?: unknown[]) => {
-    _queryCount++;
-    return getDbClient().query(text, params);
-  },
-};
+export const db = getDbClient();
