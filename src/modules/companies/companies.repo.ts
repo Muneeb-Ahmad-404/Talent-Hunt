@@ -42,7 +42,7 @@ export async function getRecruiterCompany(
 
 export async function getCompanyById(companyId: string): Promise<Company | null> {
   const result = await db.query<{ id: string; name: string; status: string }>(
-    `SELECT id, name, verified
+    `SELECT id, name, status
      FROM companies
      WHERE id = $1`,
     [companyId],
