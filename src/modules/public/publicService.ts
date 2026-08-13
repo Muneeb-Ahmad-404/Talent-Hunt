@@ -20,10 +20,12 @@ export async function getPublicJobs(query: PublicJobsQuery) {
     `c.status = 'verified'`,
   ];
 
-  // Text search — temporary ILIKE; replaced by full-text search in ch43
+  // Full-text search using tsvector + GIN index (replaces ILIKE from ch39)
   if (q) {
-    params.push(`%${q}%`);
-    conditions.push(`(j.title ILIKE $${params.length} OR j.description ILIKE $${params.length})`);
+    params.push(q);
+    conditions.push(
+      `j.search_vector @@ plainto_tsquery('english', $${params.length})`
+    );
   }
 
   if (location) {
@@ -71,7 +73,9 @@ export async function getPublicJobs(query: PublicJobsQuery) {
   const jobs = hasNextPage ? rows.slice(0, limit) : rows;
 
   const nextCursor =
-    hasNextPage ? encodeCursor(jobs[jobs.length - 1].created_at, jobs[jobs.length - 1].id) : null;
+    hasNextPage
+      ? encodeCursor(jobs[jobs.length - 1].created_at, jobs[jobs.length - 1].id)
+      : null;
 
   return {
     jobs: jobs.map((r) => ({
@@ -85,44 +89,5 @@ export async function getPublicJobs(query: PublicJobsQuery) {
       createdAt:      r.created_at,
     })),
     nextCursor,
-  };
-}
-
-export async function getPublicJobById(id: string) {
-  const sql = `
-    SELECT
-      j.id,
-      j.title,
-      j.description,
-      j.location,
-      j.employment_type,
-      j.salary_min,
-      j.salary_max,
-      j.attributes,
-      j.screening_questions,
-      j.created_at,
-      c.name AS company_name
-    FROM jobs j
-    JOIN companies c ON c.id = j.company_id
-    WHERE j.id = $1
-      AND j.status = 'open'
-      AND c.status = 'verified'
-  `;
-  const { rows } = await db.query(sql, [id]);
-  if (rows.length === 0) throw new NotFoundError('Job not found.');
-
-  const r = rows[0];
-  return {
-    id:                 r.id,
-    title:              r.title,
-    description:        r.description,
-    companyName:        r.company_name,
-    location:           r.location,
-    employmentType:     r.employment_type,
-    salaryMin:          r.salary_min,
-    salaryMax:          r.salary_max,
-    attributes:         r.attributes,
-    screeningQuestions: r.screening_questions,
-    createdAt:          r.created_at,
   };
 }
