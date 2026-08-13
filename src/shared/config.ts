@@ -22,7 +22,8 @@ const EnvSchema = z.object({
   SMTP_FROM:              z.string().default('noreply@jobportal.local'),
   OTP_EXPIRES_IN_MINUTES: z.coerce.number().int().positive().default(15),
   INVITATION_EXPIRES_IN_HOURS: z.coerce.number().int().default(72),
-  APP_BASE_URL: z.string().default('http://localhost:3000'),  
+  APP_BASE_URL: z.string().default('http://localhost:3000'),
+  cacheTtlSeconds: z.coerce.number().default(60),
 });
 
 const parsed = EnvSchema.safeParse(process.env);

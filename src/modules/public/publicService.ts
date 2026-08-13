@@ -1,8 +1,10 @@
-import { decodeCursor, encodeCursor } from '../../shared/cursor';
 import { db } from '../../shared/db';
+import { redis } from '../../shared/redis';
+import { config } from '../../shared/config';
 import { NotFoundError } from '../../shared/errors';
+import { decodeCursor, encodeCursor } from '../../shared/cursor';
 
-
+const PUBLIC_PAGE1_KEY = 'jobs:public:page1';
 
 interface PublicJobsQuery {
   q?:               string;
@@ -14,13 +16,25 @@ interface PublicJobsQuery {
 
 export async function getPublicJobs(query: PublicJobsQuery) {
   const { q, location, employment_type, cursor, limit } = query;
+
+  // Cache-aside: only cache the unfiltered first page
+  const isFirstPage = !cursor;
+  const hasFilters = q || location || employment_type;
+  const useCached = isFirstPage && !hasFilters && limit === 20;
+
+  if (useCached) {
+    const cached = await redis.get(PUBLIC_PAGE1_KEY);
+    if (cached) {
+      return JSON.parse(cached);
+    }
+  }
+
   const params: unknown[] = [];
   const conditions: string[] = [
     `j.status = 'open'`,
     `c.status = 'verified'`,
   ];
 
-  // Full-text search using tsvector + GIN index (replaces ILIKE from ch39)
   if (q) {
     params.push(q);
     conditions.push(
@@ -71,13 +85,12 @@ export async function getPublicJobs(query: PublicJobsQuery) {
 
   const hasNextPage = rows.length > limit;
   const jobs = hasNextPage ? rows.slice(0, limit) : rows;
-
   const nextCursor =
     hasNextPage
       ? encodeCursor(jobs[jobs.length - 1].created_at, jobs[jobs.length - 1].id)
       : null;
 
-  return {
+  const result = {
     jobs: jobs.map((r) => ({
       id:             r.id,
       title:          r.title,
@@ -89,5 +102,56 @@ export async function getPublicJobs(query: PublicJobsQuery) {
       createdAt:      r.created_at,
     })),
     nextCursor,
+  };
+
+  // Store in Redis if this was the cacheable request
+  if (useCached) {
+    await redis.set(
+      PUBLIC_PAGE1_KEY, 
+      JSON.stringify(result), 
+      'EX', 
+      config.cacheTtlSeconds
+    );
+  }
+
+  return result;
+}
+
+export async function getPublicJobById(id: string) {
+  const sql = `
+    SELECT
+      j.id,
+      j.title,
+      j.description,
+      j.location,
+      j.employment_type,
+      j.salary_min,
+      j.salary_max,
+      j.attributes,
+      j.screening_questions,
+      j.created_at,
+      c.name AS company_name
+    FROM jobs j
+    JOIN companies c ON c.id = j.company_id
+    WHERE j.id = $1
+      AND j.status = 'open'
+      AND c.status = 'verified'
+  `;
+  const { rows } = await db.query(sql, [id]);
+  if (rows.length === 0) throw new NotFoundError('Job not found.');
+
+  const r = rows[0];
+  return {
+    id:                 r.id,
+    title:              r.title,
+    description:        r.description,
+    companyName:        r.company_name,
+    location:           r.location,
+    employmentType:     r.employment_type,
+    salaryMin:          r.salary_min,
+    salaryMax:          r.salary_max,
+    attributes:         r.attributes,
+    screeningQuestions: r.screening_questions,
+    createdAt:          r.created_at,
   };
 }
