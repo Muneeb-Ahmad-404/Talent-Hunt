@@ -1,0 +1,7 @@
+The cache is bypassed for any filtered request. A product manager argues that the location=Remote filter is extremely common — possibly as common as the unfiltered view — and should also be cached. Describe how you would extend the caching strategy to support a small set of high-traffic filter combinations. What are the risks of caching too many keys?
+
+the location=remote is still not the default page, also we can index the location filter for faster queries instead of caching it. We can extend caching and for specific filters like location=remote store the results locally as well but that may lead to too many keys increasing the cache size and decreasing overall effectiveness.
+
+The JSON serialised in Redis includes createdAt as an ISO string. When the response is returned from cache, PostgreSQL Date objects are already strings — so the type is consistent. However, if you later add a field that does not serialise cleanly with JSON.stringify (e.g., a BigInt, a Buffer, or a circular reference), the cache write would fail silently or produce incorrect output. Describe a defensive pattern for detecting serialisation failures before they reach production.
+
+Using try catch blocks and validating before caching can help us detect failures before they reach production. 
