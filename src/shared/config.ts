@@ -24,6 +24,11 @@ const EnvSchema = z.object({
   INVITATION_EXPIRES_IN_HOURS: z.coerce.number().int().default(72),
   APP_BASE_URL: z.string().default('http://localhost:3000'),
   cacheTtlSeconds: z.coerce.number().default(60),
+  S3_ENDPOINT:        z.url(),
+  S3_REGION:          z.string().default('us-east-1'),
+  S3_BUCKET:          z.string(),
+  S3_ACCESS_KEY_ID:   z.string(),
+  S3_SECRET_ACCESS_KEY: z.string(),
 });
 
 const parsed = EnvSchema.safeParse(process.env);
