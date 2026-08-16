@@ -1,0 +1,7 @@
+The snapshot captures resumeKey — the S3 key of the most recently uploaded résumé at submission time. If the applicant deletes their résumé from S3 after applying (or if the file is deleted by a lifecycle rule), the resumeKey in the snapshot points to a non-existent object. Describe two strategies for handling "dangling" résumé keys in snapshots. What is the trade-off between each approach in terms of data integrity and complexity?
+
+We either should soft delete the resume so that the reference is always right or we should just handle the error caused by dangling resume keys gracefully. The first option maintains the data integrity and the second approachmaintains data integrity by showing a placeholder (but requires error handling)
+
+The snapshot is built from a separate query to applicants and resumes. Between the snapshot query and the application INSERT, another request could update the applicant's profile (a concurrent PATCH request). Describe what the snapshot would contain in that race condition. Is this a correctness problem? Propose a database-level approach that eliminates the race.
+
+Yes that is a correctness problem as the snapshot need to be uptodate for that specific moment but if there is an update in btw the snapshot could have stale information. We can solve this if we use a SELECT ... FOR UPDATE on the applicant's row at the beginning of the application transaction, locking the row so no concurrent updates can modify the profile until the snapshot is captured and the application is inserted.
