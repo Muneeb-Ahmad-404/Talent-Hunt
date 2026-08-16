@@ -2,6 +2,7 @@ import { ZodAny, ZodError } from 'zod';
 import { db } from '../../shared/db';
 import { NotFoundError } from '../../shared/errors';
 import { ValidationError } from '../../shared/validate';
+import { ApplicationSnapshot } from './applicants.schema';
 
 export async function assertApplicantOwnership(
   applicantId: string,
@@ -200,4 +201,29 @@ export async function getOpenJobs(jobIds: string[]): Promise<{ id: string }[]> {
     [jobIds]
   );
   return result.rows;
+}
+
+export async function buildApplicantSnapshot(applicantId: string): Promise<ApplicationSnapshot> {
+  const profileResult = await db.query(
+    `SELECT headline, bio, skills FROM applicants WHERE id = $1`,
+    [applicantId]
+  );
+  const profile = profileResult.rows[0];
+  if (!profile) throw new NotFoundError('Applicant profile not found');
+
+  const resumeResult = await db.query(
+    `SELECT s3_key FROM resumes
+     WHERE applicant_id = $1
+     ORDER BY uploaded_at DESC
+     LIMIT 1`,
+    [applicantId]
+  );
+  const resumeKey = resumeResult.rows[0]?.s3_key ?? null;
+
+  return {
+    headline:  profile.headline ?? null,
+    bio:       profile.bio ?? null,
+    skills:    profile.skills ?? [],
+    resumeKey,
+  };
 }
