@@ -12,6 +12,8 @@ export async function up(pgm: MigrationBuilder): Promise<void> {
                                         'final_interview', 'offer',
                                         'hired', 'rejected'
                                       )),
+      status       text NOT NULL DEFAULT 'active'
+                 CHECK(status IN ('active','withdrawn')),
       screening_answers jsonb       NOT NULL DEFAULT '{}',
       profile_snapshot  jsonb       NOT NULL DEFAULT '{}',
       created_at        timestamptz NOT NULL DEFAULT now(),

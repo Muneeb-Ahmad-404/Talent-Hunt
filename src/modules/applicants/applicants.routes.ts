@@ -82,6 +82,16 @@ router.delete('/shortlist/:jobId', async (req, res, next) => {
   }
 });
 
+router.post('/apply', async (req, res, next) => {
+  try {
+    const { jobIds, answers = {} } = req.body;
+    const result = await service.applyToJobs(req.user!.userId, { jobIds, answers });
+    res.status(201).json(result);
+  } catch (err) {
+    next(err);
+  }
+});
+
 export default router;router.get('/', (_req, res) => {
   res.status(501).json({ error: 'Not Implemented' });
 });
