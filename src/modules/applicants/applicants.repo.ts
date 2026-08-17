@@ -180,6 +180,7 @@ export async function checkExistingApplications(
   return result.rows.map((r) => r.job_id);
 }
 
+// applicants.repo.ts — update insertApplication
 export async function insertApplication(
   client: PoolClient,
   applicantId: string,
@@ -194,7 +195,16 @@ export async function insertApplication(
      RETURNING id`,
     [jobId, applicantId, JSON.stringify(answers), JSON.stringify(snapshot)]
   );
-  return result.rows[0] ?? null; // null means already existed (DO NOTHING)
+
+  if (result.rows[0]) {
+    return { id: result.rows[0].id, created: true };
+  }
+
+  const existing = await client.query(
+    `SELECT id FROM applications WHERE job_id = $1 AND applicant_id = $2`,
+    [jobId, applicantId]
+  );
+  return { id: existing.rows[0].id, created: false };
 }
 
 export async function getOpenJobs(jobIds: string[]): Promise<{ id: string }[]> {

@@ -120,8 +120,11 @@ export async function applyToJobs(
     for (const jobId of jobsToInsert) {
       const answers = body.answers[jobId] ?? [];
       const application = await repo.insertApplication(client, profile.id, jobId, answers, snapshot);
-      if (application) created.push(application.id);
-      else skipped.push(jobId);
+      if (application.created) {
+        created.push(application.id);
+      } else {
+        skipped.push(jobId);
+      }
     }
 
     await client.query('COMMIT');
