@@ -5,6 +5,7 @@ import { getPresignedUploadUrl } from '../../shared/storage';
 import { config }from '../../shared/config';
 import { ValidationError } from '../../shared/validate';
 import { ZodError } from 'zod';
+import { pool } from '../../shared/db';
 
 export async function createProfile(
   userId: string,
@@ -84,18 +85,17 @@ export async function applyToJobs(
 ) {
   if (body.jobIds.length === 0 || body.jobIds.length > 10) {
     throw new ValidationError(new ZodError([
-          {
-            code: 'custom',
-            path: ['limit'],
-            message: 'jobIds must contain 1–10 items',
-          },
-          ]));
+      {
+        code: 'custom',
+        path: ['limit'],
+        message: 'jobIds must contain 1–10 items',
+      },
+    ]));
   }
 
   const profile = await repo.findApplicantByUserId(userId);
   if (!profile) throw new NotFoundError('Profile not found');
 
-  // Verify all jobs exist and are open
   const openJobs = await repo.getOpenJobs(body.jobIds);
   const openJobIds = new Set(openJobs.map((j) => j.id));
   const closedOrMissing = body.jobIds.filter((id) => !openJobIds.has(id));
@@ -103,29 +103,33 @@ export async function applyToJobs(
     throw new NotFoundError(`Jobs not found or not open: ${closedOrMissing.join(', ')}`);
   }
 
-  // Find already-applied jobs (to skip them, not fail)
   const alreadyApplied = await repo.checkExistingApplications(profile.id, body.jobIds);
   const alreadyAppliedSet = new Set(alreadyApplied);
 
-  const created: string[] = [];
-  const skipped: string[] = [];
-
-  // Build once for the whole submission — same profile at the same moment
   const snapshot = await repo.buildApplicantSnapshot(profile.id);
 
-  for (const jobId of body.jobIds) {
-    if (alreadyAppliedSet.has(jobId)) {
-      skipped.push(jobId);
-      continue;
+  const jobsToInsert = body.jobIds.filter((id) => !alreadyAppliedSet.has(id));
+  const skipped = body.jobIds.filter((id) => alreadyAppliedSet.has(id));
+
+  const created: string[] = [];
+
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+
+    for (const jobId of jobsToInsert) {
+      const answers = body.answers[jobId] ?? [];
+      const application = await repo.insertApplication(client, profile.id, jobId, answers, snapshot);
+      if (application) created.push(application.id);
+      else skipped.push(jobId);
     }
 
-    const answers = body.answers[jobId] ?? [];
-    const application = await repo.insertApplication(profile.id, jobId, answers, snapshot);
-    if (application) {
-      created.push(application.id);
-    } else {
-      skipped.push(jobId); // DO NOTHING fired (race condition)
-    }
+    await client.query('COMMIT');
+  } catch (err) {
+    await client.query('ROLLBACK');
+    throw err;
+  } finally {
+    client.release();
   }
 
   return { created, skipped };

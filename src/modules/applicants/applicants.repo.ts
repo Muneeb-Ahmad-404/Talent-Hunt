@@ -3,6 +3,7 @@ import { db } from '../../shared/db';
 import { NotFoundError } from '../../shared/errors';
 import { ValidationError } from '../../shared/validate';
 import { ApplicationSnapshot } from './applicants.schema';
+import { PoolClient } from 'pg';
 
 export async function assertApplicantOwnership(
   applicantId: string,
@@ -180,12 +181,13 @@ export async function checkExistingApplications(
 }
 
 export async function insertApplication(
+  client: PoolClient,
   applicantId: string,
   jobId: string,
   answers: unknown,
-  snapshot: unknown
+  snapshot: unknown,
 ) {
-  const result = await db.query(
+  const result = await client.query(
     `INSERT INTO applications (job_id, applicant_id, screening_answers, profile_snapshot)
      VALUES ($1, $2, $3, $4)
      ON CONFLICT (job_id, applicant_id) DO NOTHING
