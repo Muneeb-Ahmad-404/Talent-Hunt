@@ -180,6 +180,31 @@ export async function checkExistingApplications(
   return result.rows.map((r) => r.job_id);
 }
 
+export async function getExistingApplications(userId: string) {
+  const applicantResult = await db.query(
+    `SELECT id FROM applicants WHERE user_id = $1`,
+    [userId]
+  );
+
+  if (applicantResult.rows.length === 0) {
+    return [];
+  }
+
+  const applicantId = applicantResult.rows[0].id;
+
+  const result = await db.query(
+    `SELECT a.id, a.stage, j.title AS job_title, c.name AS company_name
+     FROM applications a
+     JOIN jobs j ON j.id = a.job_id
+     JOIN companies c ON c.id = j.company_id
+     WHERE a.applicant_id = $1
+     ORDER BY a.created_at DESC`,
+    [applicantId]
+  );
+
+  return result.rows;
+}
+
 // applicants.repo.ts — update insertApplication
 export async function insertApplication(
   client: PoolClient,

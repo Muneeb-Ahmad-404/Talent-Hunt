@@ -137,3 +137,13 @@ export async function applyToJobs(
 
   return { created, skipped };
 }
+
+export async function getExistingApplications(userId: string) {
+  const profile = await repo.findApplicantByUserId(userId);
+  if (!profile) throw new NotFoundError('Profile not found');
+
+  const existingApplications = await repo.getExistingApplications(userId);
+  console.log(existingApplications)
+
+  return existingApplications
+}
