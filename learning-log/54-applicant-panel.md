@@ -1,0 +1,7 @@
+The résumé upload requires three HTTP requests from the browser: get presigned URL, PUT to S3, confirm to API. If the user closes the browser after step 2 (PUT to S3) but before step 3 (confirm), the file exists in S3 but the resumes table has no record of it. From the applicant's perspective, the upload appears to have been interrupted. Describe the user experience implications and two strategies for handling this orphaned file state.
+
+The user would have to try uploading again, but that results in an orphaned file state so we can schedule a job to remove these orphaned files. Another option is to generate a hash of the file, and when the browser is closed and the user retries a file with the same hash is already there so it can be removed or linked to the resume table.
+
+The Apply button on /jobs/[id] submits answers: {} — no screening answers. Some jobs have required screening questions stored in jobs.screening_questions. Describe the changes needed to the job detail page to fetch and render screening questions, collect the applicant's answers, and include them in the apply request. What validation (client-side and server-side) is needed?
+
+Form validations are needed so that the client does not leave those fields empty, for the server side the answers should match the type of the questions. We need to add screening questions in the respons from backend api, then render these questions dynamically using map, add answer fields with not empty validation and then include in /apply request
