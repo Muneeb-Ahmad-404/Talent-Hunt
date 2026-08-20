@@ -94,3 +94,51 @@ export async function scheduleInterview(
 
   return interview;
 }
+
+export async function recordInterviewFeedback(
+  userId: string,
+  interviewId: string,
+  body: { feedback: string; outcome: 'moved_forward' | 'rejected' }
+) {
+  const companyId = await repo.recruiterCompanyId(userId)
+  if (!companyId){
+      throw new ForbiddenError('User does not have a company')
+  }
+
+  const interview = await repo.findInterviewForCompany(interviewId, companyId);
+  if (!interview) throw new NotFoundError('Interview not found');
+
+  if (interview.outcome !== 'pending') {
+    throw new ValidationError('Feedback has already been recorded for this interview');
+  }
+
+  if (interview.application_status === 'withdrawn') {
+    throw new ValidationError('Cannot record feedback for a withdrawn application');
+  }
+
+  // Update the interview record
+  const updatedInterview = await repo.updateInterviewFeedback(
+    interviewId,
+    body.feedback,
+    body.outcome
+  );
+
+  // Advance or terminate the application based on outcome
+  let updatedApplication: Record<string, unknown> | null = null;
+
+  if (body.outcome === 'rejected') {
+    updatedApplication = await repo.updateApplicationStage(interview.application_id, 'rejected');
+  } else {
+    // outcome === 'moved_forward': advance to the next stage
+    const currentStage = interview.application_stage as Stage;
+    const currentIdx   = STAGE_ORDER.indexOf(currentStage);
+    const nextStage    = STAGE_ORDER[currentIdx + 1];
+
+    if (!nextStage || TERMINAL_STAGES.has(currentStage)) {
+    } else {
+      updatedApplication = await repo.updateApplicationStage(interview.application_id, nextStage);
+    }
+  }
+
+  return { interview: updatedInterview, application: updatedApplication };
+}
