@@ -142,3 +142,27 @@ export async function recordInterviewFeedback(
 
   return { interview: updatedInterview, application: updatedApplication };
 }
+
+const ALL_STAGES = [
+  'applied', 'screening', 'interview', 'final_interview', 'offer', 'hired', 'rejected'
+] as const;
+
+export async function getCompanyPipeline(userId: string) {
+  const companyId = await repo.recruiterCompanyId(userId)
+  if (!companyId){
+      throw new ForbiddenError('User does not have a company')
+  }
+
+  const applications = await repo.findApplicationsForCompany(companyId);
+
+  // Group into a pipeline object keyed by stage
+  const pipeline: Record<string, typeof applications> = Object.fromEntries(
+    ALL_STAGES.map((stage) => [stage, []])
+  );
+
+  for (const app of applications) {
+    pipeline[app.stage]?.push(app);
+  }
+
+  return pipeline;
+}

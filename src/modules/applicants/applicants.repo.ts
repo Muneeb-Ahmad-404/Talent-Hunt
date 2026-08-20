@@ -264,3 +264,36 @@ export async function buildApplicantSnapshot(applicantId: string): Promise<Appli
     resumeKey,
   };
 }
+
+export async function findApplicationsForApplicant(applicantId: string) {
+  const result = await db.query(
+    `SELECT
+       a.id,
+       a.job_id,
+       a.stage,
+       a.status,
+       a.created_at,
+       j.title       AS job_title,
+       c.name        AS company_name,
+       -- Most recent upcoming interview with pending outcome
+       (
+         SELECT row_to_json(i_sub)
+         FROM (
+           SELECT id, scheduled_at, meeting_link, notes
+           FROM interviews
+           WHERE application_id = a.id
+             AND outcome = 'pending'
+             AND scheduled_at > now()
+           ORDER BY scheduled_at ASC
+           LIMIT 1
+         ) i_sub
+       ) AS upcoming_interview
+     FROM applications a
+     JOIN jobs      j ON j.id = a.job_id
+     JOIN companies c ON c.id = j.company_id
+     WHERE a.applicant_id = $1
+     ORDER BY a.created_at DESC`,
+    [applicantId]
+  );
+  return result.rows;
+}

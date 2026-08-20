@@ -146,3 +146,10 @@ export async function getExistingApplications(userId: string) {
 
   return existingApplications
 }
+
+export async function getMyApplications(userId: string) {
+  const profile = await repo.findApplicantByUserId(userId);
+  if (!profile) throw new NotFoundError('Profile not found');
+  console.log(repo.findApplicationsForApplicant(profile.id))
+  return repo.findApplicationsForApplicant(profile.id);
+}
