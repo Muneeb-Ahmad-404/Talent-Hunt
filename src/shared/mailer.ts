@@ -40,3 +40,23 @@ export async function sendInvitationEmail(toEmail: string, rawToken: string) {
     text: `You have been invited to join a company workspace. Accept your invitation here:\n\n${link}\n\nThis link expires in ${config.INVITATION_EXPIRES_IN_HOURS} hours.`,
   });
 }
+
+export async function sendInterviewNotification(
+  to: string,
+  jobTitle: string,
+  scheduledAt: Date,
+  meetingLink: string,
+  notes: string | null
+) {
+  await transporter.sendMail({
+    from: config.SMTP_FROM,
+    to,
+    subject: `Interview scheduled — ${jobTitle}`,
+    text: [
+      `Your interview for ${jobTitle} has been scheduled.`,
+      `Date/Time: ${scheduledAt.toUTCString()}`,
+      `Meeting link: ${meetingLink}`,
+      notes ? `Notes from the recruiter: ${notes}` : '',
+    ].filter(Boolean).join('\n\n'),
+  });
+}
