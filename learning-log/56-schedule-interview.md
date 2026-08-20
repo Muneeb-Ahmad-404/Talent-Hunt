@@ -1,0 +1,8 @@
+Scheduling an interview advances the application stage to interview as a side effect — the stage update is not explicitly requested by the recruiter. This is a form of implicit state mutation. Argue for and against implicit stage advancement in this context. What would the recruiter experience be if the stage were NOT automatically advanced (they would need to call the stage endpoint separately)?
+
+The current approach provides a single click default transition which is expected in most cases, the flow is easier but there is abstraction and weve to deal with edge cases.
+For the latter approach we have got full control and there is no abstraction but the problem is the user would need to click the transition button seperately, it could result in a state where a meeting is scheduled but the stage is screening which is not really correct.
+
+The email is sent inline — the HTTP request waits for the SMTP server. If the SMTP server is down, the interview row is committed but no email is sent. The recruiter's request returns a 500 error. The recruiter retries: a second interview row is created, and now an email is (eventually) sent for the second row only. Describe the state the system is in after this sequence. Propose a recovery strategy that does not require manual database intervention.
+
+We could generate an id and if that id matches a row in db we skip it and send the same existing reference... or we could just ignore it and the applicant can see that both have same values. Add a seperate job queue for emails to repeat that on failure without manual submission of interview details
