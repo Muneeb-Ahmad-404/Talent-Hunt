@@ -9,7 +9,6 @@ export class ValidationError extends Error {
 
 export function validateBody<T>(schema: ZodType<T>, data: unknown): T {
   const result = schema.safeParse(data);
-  console.log(result)
   if (!result.success) throw new ValidationError(result.error);
   return result.data;
 }

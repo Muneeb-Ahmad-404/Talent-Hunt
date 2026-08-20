@@ -9,7 +9,6 @@ router.use(requireAuth, requireRole('recruiter'));
 router.patch('/:id/stage', async (req, res, next) => {
   try { 
     const { stage } = req.body;
-    console.log('good')
     const updated = await service.moveApplicationStage(
       req.user?.userId || "",
       req.params.id,

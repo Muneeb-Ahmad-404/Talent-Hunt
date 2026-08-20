@@ -4,7 +4,6 @@ export async function findApplicationForCompany(
   applicationId: string,
   companyId: string
 ) {
-    console.log(applicationId, companyId)
   const result = await db.query(
     `SELECT a.id, a.job_id, a.applicant_id, a.stage, a.status
      FROM applications a

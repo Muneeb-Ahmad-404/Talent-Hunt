@@ -143,7 +143,6 @@ export async function getExistingApplications(userId: string) {
   if (!profile) throw new NotFoundError('Profile not found');
 
   const existingApplications = await repo.getExistingApplications(userId);
-  console.log(existingApplications)
 
   return existingApplications
 }
