@@ -3,6 +3,7 @@ import { authMiddleware } from '../../shared/auth-middleware';
 import { requireRole } from '../../shared/require-role';
 import { NotFoundError } from '../../shared/errors';
 import { db } from '../../shared/db';
+import * as service from './admin.service';
 
 const router = Router();
 
@@ -30,6 +31,33 @@ router.get('/jobs/:id', async (req, res, next) => {
     }
 
     res.json(result.rows[0]);
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.get('/companies', async (req, res, next) => {
+  try {
+    const companies = await service.listCompanies(req.query.status as string | undefined);
+    res.json({ companies });
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.patch('/companies/:id/verify', async (req, res, next) => {
+  try {
+    const company = await service.verifyCompany(req.params.id);
+    res.json({ company });
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.patch('/companies/:id/suspend', async (req, res, next) => {
+  try {
+    const company = await service.suspendCompany(req.params.id);
+    res.json({ company });
   } catch (err) {
     next(err);
   }
