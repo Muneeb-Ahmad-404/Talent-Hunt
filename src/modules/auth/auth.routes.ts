@@ -14,7 +14,8 @@ import {
   refresh, 
   logout, 
   verifyEmail, 
-  resendVerification
+  resendVerification,
+  getUser
 } from './auth.service';
 import { acceptInvitationSchema } from './auth.schema';
 import { acceptInvitation } from './auth.service';
@@ -93,5 +94,13 @@ router.post('/accept-invitation', async (req, res, next) => {
   }
 });
 
+router.get('/me', authMiddleware, async (req, res, next) => {
+  try {
+    const user = await getUser(req.user!.userId);
+    res.json({ user });
+  } catch(err) {
+    next(err);
+  }
+});
 
 export { router as authRouter };

@@ -219,3 +219,13 @@ export async function acceptInvitation(input: AcceptInvitationInput) {
   return issueTokenPair(userId, userRole);
 
 }
+
+export async function getUser(userId: string) {
+  const user = await findUserById(userId);
+
+  if (!user) {
+    return;
+  }
+
+  return user;
+}
