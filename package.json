@@ -5,8 +5,10 @@
   "main": "index.js",
   "scripts": {
     "dev": "tsx watch src/server.ts",
+    "worker": "tsx src/worker/worker.ts",
+    "start:worker": "node dist/worker/worker.js",
     "build": "tsc",
-    "start": "node dist/server.js",
+    "start": "node dist/index.js",
     "typecheck": "tsc --noEmit",
     "migrate": "tsx --env-file=.env node_modules/node-pg-migrate/bin/node-pg-migrate up",
     "migrate:down": "tsx --env-file=.env node_modules/node-pg-migrate/bin/node-pg-migrate down 1",
@@ -30,8 +32,11 @@
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1111.0",
     "@aws-sdk/s3-request-presigner": "^3.1111.0",
+    "@bull-board/api": "^9.3.2",
+    "@bull-board/express": "^9.3.2",
     "@prisma/client": "^7.8.0",
     "bcryptjs": "^3.0.3",
+    "bullmq": "^6.2.0",
     "express": "^5.2.1",
     "ioredis": "^5.11.1",
     "jsonwebtoken": "^9.0.3",

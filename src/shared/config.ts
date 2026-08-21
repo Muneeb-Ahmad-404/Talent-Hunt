@@ -11,7 +11,7 @@ const EnvSchema = z.object({
   NODE_ENV:               z.enum(['development', 'test', 'production']).default('development'),
   PORT:                   z.coerce.number().int().positive().default(3000),  // (3) COERCE: "3000" → 3000
   DATABASE_URL:           z.url(),                                  // required; secrets get no default
-  REDIS_URL:              z.url(),
+  REDIS_URL:              z.string().default('redis://localhost:6379'),
   JWT_SECRET:             z.string().min(32),                               // required AND long enough to be safe
   JWT_EXPIRES_IN:         z.string().default('15m'),
   REFRESH_TOKEN_EXPIRES_IN_DAYS: z.coerce.number().int().positive().default(7),

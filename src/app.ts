@@ -7,6 +7,12 @@ import { companiesRouter } from "./modules/companies/companies.routes";
 import { jobsRouter } from "./modules/jobs/jobs.routes";
 import { publicRouter } from './modules/public/publicRouter';
 import { applicationsRouter } from "./modules/applications/applications.routes";
+import { config } from "./shared/config";
+import { createBullBoard } from '@bull-board/api';
+import { BullMQAdapter } from '@bull-board/api/bullMQAdapter';
+import { ExpressAdapter } from '@bull-board/express';
+import queue from './shared/queue';
+
 
 const app: Application = express();
 
@@ -31,5 +37,13 @@ app.use('/api/jobs', jobsRouter)
 app.use('/api/applications/', applicationsRouter);
 
 app.use(errorHandler);
+
+if (config.NODE_ENV == "development"){
+
+  queue.add('send-application-confirmation', { test: true });
+  const serverAdapter = new ExpressAdapter();
+  createBullBoard({ queues: [new BullMQAdapter(queue)], serverAdapter });
+  app.use('/admin/queues', serverAdapter.getRouter());
+}
 
 export default app;
