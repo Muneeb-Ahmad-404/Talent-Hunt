@@ -11,7 +11,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
       headers: { Authorization: `Bearer ${token}` },
       cache: 'no-store',
     });
-    if (!res.ok) redirect('/login');
+  if (!res.ok) redirect('/login');
 
   const { user } = await res.json();
   if (user.role !== 'admin') redirect('/');
