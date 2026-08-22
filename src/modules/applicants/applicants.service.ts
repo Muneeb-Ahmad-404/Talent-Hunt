@@ -113,7 +113,6 @@ export async function applyToJobs(
   const skipped = body.jobIds.filter((id) => alreadyAppliedSet.has(id));
 
   const created: string[] = [];
-
   const client = await pool.connect();
   try {
     await client.query('BEGIN');

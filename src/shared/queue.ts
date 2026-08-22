@@ -1,4 +1,4 @@
-import { Queue } from 'bullmq';
+import { DefaultJobOptions, Queue } from 'bullmq';
 import { config } from './config';
 
 // All background jobs go into this single queue
@@ -10,9 +10,19 @@ export type JobName =
   | 'cleanup-expired-refresh-tokens'
   | 'send-recruiter-digest';
 
-// BullMQ Queue uses its own Redis connection (not the shared cache client)
+const defaultJobOptions: DefaultJobOptions = {
+  attempts: 3,
+  backoff: {
+    type: 'exponential',
+    delay: 1000,   // 1s, then 2s, then 4s
+  },
+  removeOnComplete: { count: 100 },   // keep last 100 completed jobs for inspection
+  removeOnFail: { count: 50 },        // keep last 50 failed jobs
+};
+
 const queue = new Queue('jobs', {
   connection: { url: config.REDIS_URL },
+  defaultJobOptions,
 });
 
 export default queue;
