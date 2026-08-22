@@ -4,6 +4,10 @@ import { requireRole } from '../../shared/require-role';
 import { NotFoundError } from '../../shared/errors';
 import { db } from '../../shared/db';
 import * as service from './admin.service';
+import { createBullBoard } from '@bull-board/api';
+import { BullMQAdapter } from '@bull-board/api/bullMQAdapter';
+import { ExpressAdapter } from '@bull-board/express';
+import queue from '../../shared/queue';
 
 const router = Router();
 

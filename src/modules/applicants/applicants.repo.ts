@@ -36,8 +36,10 @@ export async function createApplicantProfile(
 
 export async function findApplicantByUserId(userId: string) {
   const result = await db.query(
-    `SELECT id, user_id, headline, bio, skills, created_at
-     FROM applicants WHERE user_id = $1`,
+    `SELECT a.id, a.user_id, a.headline, a.bio, a.skills, a.created_at, u.email as email
+    FROM applicants a
+    JOIN users u on u.id = a.user_id
+    WHERE user_id = $1`,
     [userId]
   );
   return result.rows[0] ?? null;
@@ -232,9 +234,12 @@ export async function insertApplication(
   return { id: existing.rows[0].id, created: false };
 }
 
-export async function getOpenJobs(jobIds: string[]): Promise<{ id: string }[]> {
+export async function getOpenJobs(jobIds: string[]): Promise<{ id: string, title: string, companyName: string }[]> {
   const result = await db.query(
-    `SELECT id FROM jobs WHERE id = ANY($1::uuid[]) AND status = 'open'`,
+    `SELECT j.id , j.title as title, c.name as "companyName" FROM jobs j 
+    JOIN companies c ON c.id = j.company_id 
+    WHERE j.id = ANY($1::uuid[]) AND j.status = 'open'
+    `,
     [jobIds]
   );
   return result.rows;

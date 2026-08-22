@@ -6,6 +6,7 @@ import { config }from '../../shared/config';
 import { ValidationError } from '../../shared/validate';
 import { ZodError } from 'zod';
 import { pool } from '../../shared/db';
+import queue from '../../shared/queue';
 
 export async function createProfile(
   userId: string,
@@ -127,6 +128,16 @@ export async function applyToJobs(
       }
     }
 
+    for (const job of openJobs){
+      if (job.id in jobsToInsert){
+        await queue.add('send-application-confirmation', {
+          applicantEmail: profile.email,   // fetched from the applicant profile join
+          jobTitle: job.title,               // from the job snapshot or a separate query
+          companyName: job.companyName,     // from the job + company join
+        });
+      }
+  }
+
     await client.query('COMMIT');
   } catch (err) {
     await client.query('ROLLBACK');
@@ -150,6 +161,5 @@ export async function getExistingApplications(userId: string) {
 export async function getMyApplications(userId: string) {
   const profile = await repo.findApplicantByUserId(userId);
   if (!profile) throw new NotFoundError('Profile not found');
-  console.log(repo.findApplicationsForApplicant(profile.id))
   return repo.findApplicationsForApplicant(profile.id);
 }
