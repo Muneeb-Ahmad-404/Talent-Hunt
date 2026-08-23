@@ -1,0 +1,7 @@
+Write down the three steps that happen between "applicant uploads a file" and "word_count is non-null in the database". Label which steps are synchronous (in the HTTP request) and which are asynchronous (in the worker). For each asynchronous step, identify what would happen if the worker crashed at that exact point.
+
+Spplicant uploads a file, server calls s3 server for a presigned url and update table, the server recieves the url and upload the file, after completion a job is run to parse the resume and count words and update the database with word count. The last step of downloading the pdf and parsing it is async the rest is sync.
+
+The handler converts the S3 response body stream to a Buffer using for await ... of. Draw the memory lifecycle: when is the buffer allocated, how large can it be, and when is it garbage collected? What would happen with a 100 MB résumé file?
+
+s3 stream chunks we await and collet thm in chunks array which is then concatted to a buffer. buffer is passed to pdf parse, after parsing the buffer is available for garbage collection. A 100 MB PDF will temporarily occupy 100+ MB of heap memory while being parsed. With a 100 MB résumé, the worker could experience high memory pressure, slower processing, and increased risk of OOM errors if multiple large files are processed concurrently, so it's wise to enforce a file size limit (e.g., 10 MB) and reject oversized uploads before enqueuing the job.
