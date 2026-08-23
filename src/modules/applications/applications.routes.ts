@@ -20,7 +20,6 @@ router.patch('/:id/stage', async (req, res, next) => {
   }
 });
 
-// In applications.routes.ts — add:
 router.post('/:id/interview', async (req, res, next) => {
   try {
     const { scheduledAt, meetingLink, notes } = req.body;

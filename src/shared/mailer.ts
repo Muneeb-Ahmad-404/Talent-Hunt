@@ -48,13 +48,15 @@ export async function sendInterviewNotification(
   meetingLink: string,
   notes: string | null
 ) {
+  const date = new Date(scheduledAt);
+  const formattedDate = date.toUTCString()
   await transporter.sendMail({
     from: config.SMTP_FROM,
     to,
     subject: `Interview scheduled — ${jobTitle}`,
     text: [
       `Your interview for ${jobTitle} has been scheduled.`,
-      `Date/Time: ${scheduledAt.toUTCString()}`,
+      `Date/Time: ${formattedDate}`,
       `Meeting link: ${meetingLink}`,
       notes ? `Notes from the recruiter: ${notes}` : '',
     ].filter(Boolean).join('\n\n'),

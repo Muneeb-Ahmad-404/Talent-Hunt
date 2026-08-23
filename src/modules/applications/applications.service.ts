@@ -1,6 +1,7 @@
 import { ValidationError, NotFoundError, ForbiddenError } from '../../shared/errors';
 import * as repo from './applications.repo'
 import { sendInterviewNotification } from '../../shared/mailer';
+import queue from '../../shared/queue';
 
 const STAGE_ORDER = [
   'applied', 'screening', 'interview', 'final_interview', 'offer', 'hired', 'rejected'
@@ -82,15 +83,16 @@ export async function scheduleInterview(
     body.meetingLink,
     body.notes ?? null
   );
-
-  // Send notification — inline for now (ch67 moves this to a background job)
-  await sendInterviewNotification(
-    application.applicant_email,
-    application.job_title,
-    new Date(body.scheduledAt),
-    body.meetingLink,
-    body.notes ?? null
-  );
+  console
+  await queue.add('send-interview-notification', {
+    applicantEmail: application.applicant_email,
+    jobTitle: application.job_title,
+    scheduledAt: interview.scheduled_at instanceof Date
+      ? interview.scheduled_at.toISOString()
+      : new Date(interview.scheduled_at).toISOString(),
+    meetingLink: interview.meeting_link,
+    notes: body.notes ?? null
+  });
 
   return interview;
 }

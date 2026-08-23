@@ -1,7 +1,7 @@
 import { Worker, Job } from 'bullmq';
 import { config } from '../shared/config';
 import { JobName } from '../shared/queue';
-import { sendApplicationConfirmationEmail } from '../shared/mailer';
+import { sendApplicationConfirmationEmail, sendInterviewNotification } from '../shared/mailer';
 import { processResume } from './handlers/processResume';
 
 // Worker connection must be separate from the Queue connection
@@ -22,6 +22,11 @@ const worker = new Worker(
         await processResume(resumeId, s3Key);
         break;
       }  
+      case 'send-interview-notification': {
+        const { applicantEmail, jobTitle, scheduledAt, meetingLink, notes } = job.data;
+        await sendInterviewNotification(applicantEmail, jobTitle,  scheduledAt, meetingLink, notes);
+        break;
+      }
       default:
         console.warn(`[worker] Unknown job name: ${job.name}. Skipping.`);
     }
