@@ -2,7 +2,6 @@ import * as repo from './applicants.repo';
 import { ConflictError, ForbiddenError, NotFoundError } from '../../shared/errors';
 import { v4 as uuidv4 } from 'uuid';
 import { getPresignedUploadUrl } from '../../shared/storage';
-import { config }from '../../shared/config';
 import { ValidationError } from '../../shared/validate';
 import { ZodError } from 'zod';
 import { pool } from '../../shared/db';
@@ -52,8 +51,15 @@ export async function confirmResumeUpload(
   if (!body.key.startsWith(`resumes/${profile.id}/`)) {
     throw new ForbiddenError('Key does not belong to this applicant');
   }
+  
+  const resume = await repo.createResume(profile.id, body.filename, body.key);
 
-  return repo.createResume(profile.id, body.filename, body.key);
+  await queue.add('process-resume', {
+    resumeId: resume.id,
+    s3Key: resume.s3_key,
+  });
+  
+  return resume
 }
 
 export async function addJobToShortlist(userId: string, jobId: string) {

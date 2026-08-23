@@ -2,6 +2,7 @@ import { Worker, Job } from 'bullmq';
 import { config } from '../shared/config';
 import { JobName } from '../shared/queue';
 import { sendApplicationConfirmationEmail } from '../shared/mailer';
+import { processResume } from './handlers/processResume';
 
 // Worker connection must be separate from the Queue connection
 const worker = new Worker(
@@ -11,11 +12,16 @@ const worker = new Worker(
 
     switch (job.name as JobName) {
       // Handlers will be added in chapters 64–69
-    case 'send-application-confirmation': {
-      const { applicantEmail, jobTitle, companyName } = job.data;
-      await sendApplicationConfirmationEmail(applicantEmail, jobTitle, companyName);
-      break;
-    }
+      case 'send-application-confirmation': {
+        const { applicantEmail, jobTitle, companyName } = job.data;
+        await sendApplicationConfirmationEmail(applicantEmail, jobTitle, companyName);
+        break;
+      }
+      case 'process-resume': {
+        const { resumeId, s3Key } = job.data;
+        await processResume(resumeId, s3Key);
+        break;
+      }  
       default:
         console.warn(`[worker] Unknown job name: ${job.name}. Skipping.`);
     }
