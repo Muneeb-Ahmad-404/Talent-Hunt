@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { validateQuery } from '../../shared/validate';
 import { getPublicJobs, getPublicJobById } from './publicService';
 import { getQueryCount, resetQueryCount } from '../../shared/db';
+import logger from '../../shared/logger';
 
 export const publicRouter = Router();
 
@@ -22,7 +23,7 @@ publicRouter.get('/jobs', async (req: Request, res: Response) => {
   const result = await getPublicJobs(data);
   res.on('finish', () => {
     if (process.env.NODE_ENV !== 'production') {
-      console.log(`[${req.method} ${req.path}] queries: ${getQueryCount()}`);
+      logger.info(`[${req.method} ${req.path}] queries: ${getQueryCount()}`);
     }
   });
   res.json(result);

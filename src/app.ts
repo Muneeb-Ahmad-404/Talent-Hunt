@@ -12,10 +12,14 @@ import { BullMQAdapter } from '@bull-board/api/bullMQAdapter';
 import { ExpressAdapter } from '@bull-board/express';
 import queue from './shared/queue';
 import { globalLimiter } from "./shared/rateLimiter";
+import { requestIdMiddleware } from "./middleware/requestId";
+import { httpLogger } from "./middleware/httpLogger";
 
 const app: Application = express();
 
 app.use(express.json());
+app.use(requestIdMiddleware);
+app.use(httpLogger);     
 app.use(globalLimiter);
 
 const serverAdapter = new ExpressAdapter();

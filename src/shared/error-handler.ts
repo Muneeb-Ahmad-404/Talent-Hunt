@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import { config } from './config';
 import { AppError } from './errors';
 import { ValidationError } from './validate';
+import logger from './logger';
 
 export function errorHandler(
   err: unknown,
@@ -9,6 +10,7 @@ export function errorHandler(
   res: Response,
   _next: NextFunction, // four-parameter signature required for Express to recognise this as an error handler
 ): void {
+  logger.error({ requestId: req.id, err }, 'unhandled error');
   if (err instanceof ValidationError) {
     const details = err.zodError.issues.map((issue) => ({
       path: issue.path.join('.'),

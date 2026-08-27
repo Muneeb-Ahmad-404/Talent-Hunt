@@ -1,5 +1,6 @@
 import { encodeCursor } from '../../shared/cursor';
 import { ForbiddenError, NotFoundError } from '../../shared/errors';
+import logger from '../../shared/logger';
 import { redis } from '../../shared/redis';
 import { getRecruiterCompany } from '../companies/companies.repo';
 import { assertCompanyRole } from '../companies/companies.service';
@@ -49,7 +50,7 @@ export async function publishJob(userId: string, jobId: string) {
   try {
     await redis.del(PUBLIC_BOARD_CACHE_KEY);
   } catch (err) {
-    console.error('[cache] Failed to invalidate public board cache:', err);
+    logger.error(err, '[cache] Failed to invalidate public board cache:');
   }
 }
 
@@ -65,7 +66,7 @@ export async function closeJob(userId: string, jobId: string) {
   try {
     await redis.del(PUBLIC_BOARD_CACHE_KEY);
   } catch (err) {
-    console.error('[cache] Failed to invalidate public board cache:', err);
+    logger.error(err, '[cache] Failed to invalidate public board cache:');
   }
 }
 

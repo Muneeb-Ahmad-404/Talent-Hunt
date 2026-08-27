@@ -31,6 +31,7 @@ const EnvSchema = z.object({
   S3_SECRET_ACCESS_KEY: z.string(),
   RATE_LIMIT_WINDOW_MS: z.coerce.number().int().default(60000),
   RATE_LIMIT_MAX: z.coerce.number().int().default(100),
+  LOG_LEVEL: z.enum(['debug', 'info', 'warn', 'error']).default(process.env.NODE_ENV === 'production' ? 'info' : 'debug'),
 });
 
 const parsed = EnvSchema.safeParse(process.env);
