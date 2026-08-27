@@ -79,3 +79,24 @@ export async function sendApplicationConfirmationEmail(
     ].join('\n\n'),
   });
 }
+
+export async function sendRecruiterDigestEmail(
+  to: string,
+  companyName: string,
+  openJobsCount: number,
+  applicationsLast7Days: number,
+  interviewsThisWeek: number
+): Promise<void> {
+  await transporter.sendMail({
+    from: config.SMTP_FROM,
+    to,
+    subject: `Weekly digest for ${companyName}`,
+    text: [
+      `Weekly hiring summary for ${companyName}`,
+      '',
+      `Open jobs:                  ${openJobsCount}`,
+      `Applications (last 7 days): ${applicationsLast7Days}`,
+      `Interviews this week:       ${interviewsThisWeek}`,
+    ].join('\n'),
+  });
+}
