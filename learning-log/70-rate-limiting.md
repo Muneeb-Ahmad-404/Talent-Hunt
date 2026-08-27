@@ -1,0 +1,7 @@
+In psql, check how many rows are in the users table. Multiply by the auth limiter: at 10 attempts per 15 minutes, how long would it take an attacker who knows all the email addresses to try one password against every user? Write down the math. Does rate limiting eliminate the attack or just slow it down?
+
+There are 13 rows in my user table. Trying one password against every user wont take 15minutes of auth limiting period + the time to try the password. It slows the attack by 15minutes.(if we are considering trying a single password an attack).
+
+Remove the Redis store configuration from authLimiter so it falls back to memory. Start two instances of the API on different ports. Make 5 auth requests to port 3000 and 5 to port 3001. Confirm neither hits the 429. Then restore the Redis store. Explain what you observed and why the Redis store is non-negotiable in a multi-instance deployment.
+
+Using redis store provides a centeralized history or record for rate limiting, if we avoid using it then each instance would have a seperate record of attempts in the memory, this would result in different limits for different servers. The attacker can carry out his attack switching between servers and for that reason using a redis store is non-negotiable for multi instance deployment
