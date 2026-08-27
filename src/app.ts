@@ -11,10 +11,16 @@ import { createBullBoard } from '@bull-board/api';
 import { BullMQAdapter } from '@bull-board/api/bullMQAdapter';
 import { ExpressAdapter } from '@bull-board/express';
 import queue from './shared/queue';
+import { globalLimiter } from "./shared/rateLimiter";
 
 const app: Application = express();
 
 app.use(express.json());
+app.use(globalLimiter);
+
+const serverAdapter = new ExpressAdapter();
+serverAdapter.setBasePath('/admin/queues');
+createBullBoard({ queues: [new BullMQAdapter(queue)], serverAdapter });
 
 // ── Infrastructure ──────────────────────────────────────────────
 app.get('/health', async (_req: Request, res: Response) => {
@@ -24,10 +30,6 @@ app.get('/health', async (_req: Request, res: Response) => {
     timestamp: new Date().toISOString(),
   });
 });
-
-const serverAdapter = new ExpressAdapter();
-serverAdapter.setBasePath('/admin/queues');
-createBullBoard({ queues: [new BullMQAdapter(queue)], serverAdapter });
 
 app.use('/api/public', publicRouter);
 
