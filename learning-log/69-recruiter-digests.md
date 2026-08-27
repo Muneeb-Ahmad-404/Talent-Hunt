@@ -1,0 +1,7 @@
+The digest query fires three correlated subqueries per company. If there are 50 verified companies, how many total SQL queries does PostgreSQL execute for the fetchCompanyDigests call? (Count the outer SELECT and each correlated subquery.) Write down the number and discuss whether this is acceptable for a job that runs once a week.
+
+200 queries in total, This is acceptable for a job that runs once a week, as we dont need it to be fast and it can run async without having an affect on use experience.
+
+The for loop sends emails sequentially. Run the digest job with a 150ms artificial delay in sendRecruiterDigestEmail (use setTimeout wrapped in a Promise). Record how long the job takes for 2 companies. Extrapolate to 100 companies. Then estimate how long the parallel Promise.all version would take.
+
+With a 150ms artificial delay per email, sending to 2 companies sequentially takes ~300ms, extrapolating to 100 companies would take 15 seconds. Using Promise.all to send all emails in parallel would reduce this to ~150ms total, regardless of company count, but this could overwhelm the SMTP server with 100 concurrent connections. A balanced approach is to use concurrency-limited parallel sending with p-limit set to 5 or 10 emails at a time, which would take approximately 3 seconds or 1.5 seconds respectively for 100 companies—providing a significant speedup over sequential sending while protecting the SMTP server from overload.
