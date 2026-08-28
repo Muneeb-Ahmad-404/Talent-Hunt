@@ -14,26 +14,23 @@ import queue from './shared/queue';
 import { globalLimiter } from "./shared/rateLimiter";
 import { requestIdMiddleware } from "./middleware/requestId";
 import { httpLogger } from "./middleware/httpLogger";
+import healthRouter from './routes/health';
 
 const app: Application = express();
 
 app.use(express.json());
 app.use(requestIdMiddleware);
-app.use(httpLogger);     
-app.use(globalLimiter);
 
 const serverAdapter = new ExpressAdapter();
 serverAdapter.setBasePath('/admin/queues');
 createBullBoard({ queues: [new BullMQAdapter(queue)], serverAdapter });
 
+app.use(httpLogger);     
+
 // ── Infrastructure ──────────────────────────────────────────────
-app.get('/health', async (_req: Request, res: Response) => {
-  return res.send({
-    status: 'ok',
-    uptime: Math.floor(process.uptime()),
-    timestamp: new Date().toISOString(),
-  });
-});
+app.use(healthRouter);
+
+app.use(globalLimiter);
 
 app.use('/api/public', publicRouter);
 

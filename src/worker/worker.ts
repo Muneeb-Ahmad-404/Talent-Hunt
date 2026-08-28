@@ -7,6 +7,7 @@ import { processResume } from './handlers/processResume';
 import { cleanupExpiredTokens } from './handlers/cleanupExpiredTokens';
 import { cleanupExpiredOtps } from './handlers/cleanupExpiredOtps';
 import { sendRecruiterDigest } from './handlers/sendRecruiterDigest';
+import logger from '../shared/logger';
 
 const queue = new Queue('jobs', {
   connection: { url: config.REDIS_URL },
@@ -97,3 +98,10 @@ worker.on('failed', (job, err) => {
 });
 
 console.log('[worker] Worker started and listening for jobs...');
+
+process.on('SIGTERM', async () => {
+  logger.info('Worker SIGTERM received — closing');
+  await worker.close();
+  logger.info('Worker closed');
+  process.exit(0);
+});

@@ -1,12 +1,47 @@
-import app from './app';
+import { pool } from './shared/db';
+import { redis } from './shared/redis';
+import logger from './shared/logger';
 import { config } from './shared/config';
+import app from './app';
 
-const port = config.PORT;
 
-const startServer = (port: number): void => {
-  app.listen(port, (): void => {
-    console.log(`Server running on port ${port}`);
+const server = app.listen(config.PORT, () => {
+  logger.info({ port: config.PORT }, 'API server started');
+});
+
+process.on('SIGTERM', () => {
+  logger.info('SIGTERM received — starting graceful shutdown');
+
+  // Stop accepting new connections
+  server.close(async () => {
+    logger.info('HTTP server closed — cleaning up');
+
+    try {
+      await pool.end();
+      logger.info('DB pool closed');
+    } catch (err) {
+      logger.error({ err }, 'Error closing DB pool');
+    }
+
+    try {
+      await redis.quit();
+      logger.info('Redis connection closed');
+    } catch (err) {
+      logger.error({ err }, 'Error closing Redis');
+    }
+
+    logger.info('Graceful shutdown complete');
+    process.exit(0);
   });
-};
 
-startServer(port);
+  // Force exit after 5 seconds if requests are still in flight
+  setTimeout(() => {
+    logger.error('Graceful shutdown timeout — forcing exit');
+    process.exit(1);
+  }, 5000);
+});
+
+process.on('SIGINT', () => {
+  logger.info('SIGINT received — initiating graceful shutdown');
+  process.kill(process.pid, 'SIGTERM');
+});
