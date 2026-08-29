@@ -22,7 +22,7 @@ const EnvSchema = z.object({
   SMTP_FROM:              z.string().default('noreply@jobportal.local'),
   OTP_EXPIRES_IN_MINUTES: z.coerce.number().int().positive().default(15),
   INVITATION_EXPIRES_IN_HOURS: z.coerce.number().int().default(72),
-  APP_BASE_URL: z.string().default('http://localhost:3000'),
+  APP_BASE_URL: z.url().default('http://localhost:3000'),
   cacheTtlSeconds: z.coerce.number().default(60),
   S3_ENDPOINT:        z.url(),
   S3_REGION:          z.string().default('us-east-1'),
@@ -32,6 +32,7 @@ const EnvSchema = z.object({
   RATE_LIMIT_WINDOW_MS: z.coerce.number().int().default(60000),
   RATE_LIMIT_MAX: z.coerce.number().int().default(100),
   LOG_LEVEL: z.enum(['debug', 'info', 'warn', 'error']).default(process.env.NODE_ENV === 'production' ? 'info' : 'debug'),
+  FRONTEND_URL: z.url().default('http://localhost:3001'),
 });
 
 const parsed = EnvSchema.safeParse(process.env);

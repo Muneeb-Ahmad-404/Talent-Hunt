@@ -15,6 +15,9 @@ import { globalLimiter } from "./shared/rateLimiter";
 import { requestIdMiddleware } from "./middleware/requestId";
 import { httpLogger } from "./middleware/httpLogger";
 import healthRouter from './routes/health';
+import helmet from 'helmet';
+import cors from 'cors';
+import { config } from "./shared/config";
 
 const app: Application = express();
 
@@ -26,6 +29,15 @@ serverAdapter.setBasePath('/admin/queues');
 createBullBoard({ queues: [new BullMQAdapter(queue)], serverAdapter });
 
 app.use(httpLogger);     
+
+app.disable('x-powered-by');
+
+app.use(helmet());
+
+app.use(cors({
+    origin: config.FRONTEND_URL,
+    credentials: true,
+}));
 
 // ── Infrastructure ──────────────────────────────────────────────
 app.use(healthRouter);
