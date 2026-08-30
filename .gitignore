@@ -1,5 +1,26 @@
+# Dependencies
 node_modules/
 dist/
+
+# Environment files
 .env
 .env.*
 !.env.example
+
+# Nginx SSL certif
+# Dependencies
+icates
+nginx/certs/
+nginx/ssl/
+*.pem
+*.crt
+*.key
+*.p12
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS files
+.DS_Store
+Thumbs.db
