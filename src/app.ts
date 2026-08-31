@@ -51,7 +51,7 @@ app.use('/api/companies', companiesRouter);
 app.use('/api/applicants', applicantsRouter);
 app.use('/api/admin', adminRouter);
 app.use('/api/jobs', jobsRouter)
-app.use('/api/applications/', applicationsRouter);
+app.use('/api/applications', applicationsRouter);
 app.use('/queues', serverAdapter.getRouter());
 
 app.use(errorHandler);

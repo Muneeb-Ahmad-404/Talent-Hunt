@@ -92,15 +92,6 @@ router.post('/apply', async (req, res, next) => {
   }
 });
 
-// router.get('/applications', async (req, res, next) => {
-//   try {
-//     const result = await service.getExistingApplications(req.user!.userId);
-//     res.status(200).json(result);
-//   } catch(err){
-//     next(err);
-//   }
-// })
-
 router.get('/applications', async (req, res, next) => {
   try {
     const applications = await service.getMyApplications(req.user!.userId);

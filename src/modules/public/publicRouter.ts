@@ -4,6 +4,7 @@ import { validateQuery } from '../../shared/validate';
 import { getPublicJobs, getPublicJobById } from './publicService';
 import { getQueryCount, resetQueryCount } from '../../shared/db';
 import logger from '../../shared/logger';
+import { config } from '../../shared/config';
 
 export const publicRouter = Router();
 
@@ -22,7 +23,7 @@ publicRouter.get('/jobs', async (req: Request, res: Response) => {
   const data = validateQuery(listQuerySchema, req.query)
   const result = await getPublicJobs(data);
   res.on('finish', () => {
-    if (process.env.NODE_ENV !== 'production') {
+    if (config.NODE_ENV !== 'production') {
       logger.info(`[${req.method} ${req.path}] queries: ${getQueryCount()}`);
     }
   });

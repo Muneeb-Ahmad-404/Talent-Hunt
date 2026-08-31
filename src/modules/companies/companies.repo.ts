@@ -65,8 +65,8 @@ export async function createCompany(
   await db.query('BEGIN');
   try {
     await db.query(
-      `INSERT INTO companies (id, name, website, slug, verified)
-       VALUES ($1, $2, $3, $4, false)`,
+      `INSERT INTO companies (id, name, website, slug, status)
+       VALUES ($1, $2, $3, $4, 'pending')`,
       [companyId, input.name, input.website ?? null, input.slug ?? null],
     );
     await db.query(
