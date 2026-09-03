@@ -2,10 +2,13 @@ import { NextRequest, NextResponse } from 'next/server';
 
 export function middleware(req: NextRequest) {
   const token = req.cookies.get('access_token')?.value;
-  const isProtected = req.nextUrl.pathname.startsWith('/dashboard');
+  const pathname = req.nextUrl.pathname;
+  const isProtected = pathname === '/dashboard' || pathname.startsWith('/dashboard/') || pathname === '/admin' || pathname.startsWith('/admin/');
 
   if (isProtected && !token) {
-    return NextResponse.redirect(new URL('/login', req.url));
+    const loginUrl = new URL('/login', req.url);
+    loginUrl.searchParams.set('next', pathname);
+    return NextResponse.redirect(loginUrl);
   }
 
   return NextResponse.next();
