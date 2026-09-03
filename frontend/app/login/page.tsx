@@ -16,13 +16,9 @@ export default function LoginPage() {
       const res = await fetch('/api/auth/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, password }) });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) { setError(data.error?.message || data.message || 'Login failed'); return; }
-      const user = data.user ?? data;
-      const role = String(user.role ?? user.userType ?? '').toLowerCase();
       const next = new URLSearchParams(window.location.search).get('next');
-      if (next && (next.startsWith('/dashboard') || next.startsWith('/admin'))) router.push(next);
-      else if (role === 'admin') router.push('/admin');
-      else if (role === 'applicant' || role === 'candidate') router.push('/dashboard/applications');
-      else router.push('/dashboard/jobs');
+      if (next && next.startsWith('/jobs/')) router.push(next);
+      else router.push('/dashboard');
     } catch { setError('Unable to connect. Please try again.'); }
     finally { setPending(false); }
   }
