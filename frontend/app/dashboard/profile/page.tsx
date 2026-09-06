@@ -1,48 +1,13 @@
 'use client';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 export default function ProfilePage() {
-  const [uploading, setUploading] = useState(false);
-  const [message, setMessage] = useState<string | null>(null);
-
-  async function handleResumeUpload(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    setUploading(true);
-    try {
-      // Step 1: get presigned URL
-      const { uploadUrl, key } = await fetch('/api/applicants/profile/resume-upload', {
-        method: 'POST',
-      }).then((r) => r.json());
-
-      // Step 2: PUT directly to S3/MinIO
-      await fetch(uploadUrl, {
-        method: 'PUT',
-        body: file,
-        headers: { 'Content-Type': 'application/pdf' },
-      });
-
-      // Step 3: confirm
-      await fetch('/api/applicants/profile/resume', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ key, filename: file.name }),
-      });
-
-      setMessage('Résumé uploaded successfully');
-    } catch {
-      setMessage('Upload failed — please try again');
-    } finally {
-      setUploading(false);
-    }
-  }
-
-  return (
-    <main>
-      <h1>My Profile</h1>
-      <input type="file" accept="application/pdf" onChange={handleResumeUpload} disabled={uploading} />
-      {message && <p>{message}</p>}
-    </main>
-  );
+  const [profile, setProfile] = useState<any>({ headline: '', bio: '', skills: [] });
+  const [skills, setSkills] = useState('');
+  const [message, setMessage] = useState('');
+  const [saving, setSaving] = useState(false);
+  useEffect(() => { fetch('/api/applicants/profile').then((r) => r.ok ? r.json() : null).then((data) => { if (data) { setProfile(data); setSkills(Array.isArray(data.skills) ? data.skills.join(', ') : ''); } }); }, []);
+  async function save(e: React.FormEvent) { e.preventDefault(); setSaving(true); setMessage(''); const response = await fetch('/api/applicants/profile', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ headline: profile.headline, bio: profile.bio, skills: skills.split(',').map((item) => item.trim()).filter(Boolean) }) }); setMessage(response.ok ? 'Profile saved.' : 'Could not save your profile.'); setSaving(false); }
+  async function upload(e: React.ChangeEvent<HTMLInputElement>) { const file = e.target.files?.[0]; if (!file) return; setMessage('Preparing upload…'); const uploadResponse = await fetch('/api/applicants/profile/resume-upload', { method: 'POST' }); const target = await uploadResponse.json(); if (!uploadResponse.ok || !target.uploadUrl) return setMessage('Could not prepare resume upload.'); await fetch(target.uploadUrl, { method: 'PUT', body: file, headers: { 'Content-Type': file.type || 'application/pdf' } }); const saved = await fetch('/api/applicants/profile/resume', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ key: target.key, filename: file.name }) }); setMessage(saved.ok ? 'Resume uploaded.' : 'Resume confirmation failed.'); }
+  return <main className="mx-auto max-w-4xl px-6 py-8 md:px-10"><p className="text-sm font-medium text-primary">Your profile</p><h1 className="mt-1 text-3xl font-semibold tracking-tight">Build your candidate profile</h1><p className="mt-2 text-muted-foreground">Give recruiters the context they need to understand your experience.</p><form onSubmit={save} className="mt-8 flex flex-col gap-6 rounded-2xl border bg-card p-6"><label className="flex flex-col gap-2 text-sm font-medium">Professional headline<input className="rounded-lg border bg-background px-3 py-2.5 font-normal outline-none focus:border-primary" value={profile.headline ?? ''} onChange={(e) => setProfile({ ...profile, headline: e.target.value })} placeholder="Product designer focused on accessible systems" /></label><label className="flex flex-col gap-2 text-sm font-medium">About you<textarea className="min-h-32 rounded-lg border bg-background px-3 py-2.5 font-normal outline-none focus:border-primary" value={profile.bio ?? ''} onChange={(e) => setProfile({ ...profile, bio: e.target.value })} placeholder="Share a short overview of your experience and goals." /></label><label className="flex flex-col gap-2 text-sm font-medium">Skills<span className="text-xs font-normal text-muted-foreground">Separate skills with commas</span><input className="rounded-lg border bg-background px-3 py-2.5 font-normal outline-none focus:border-primary" value={skills} onChange={(e) => setSkills(e.target.value)} placeholder="React, TypeScript, Product strategy" /></label><div className="flex flex-wrap items-center gap-3"><button disabled={saving} className="rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground disabled:opacity-50">{saving ? 'Saving…' : 'Save profile'}</button>{message && <span className="text-sm text-muted-foreground">{message}</span>}</div></form><section className="mt-6 rounded-2xl border bg-card p-6"><h2 className="font-semibold">Resume</h2><p className="mt-1 text-sm text-muted-foreground">Upload a PDF so recruiters can review your background.</p><label className="mt-5 inline-flex cursor-pointer rounded-lg border px-4 py-2.5 text-sm font-semibold hover:bg-muted"><input type="file" accept="application/pdf" className="sr-only" onChange={upload} />Upload PDF</label></section></main>;
 }

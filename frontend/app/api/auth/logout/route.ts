@@ -8,7 +8,11 @@ export async function POST() {
     method: 'POST',
     body: JSON.stringify({ refreshToken }),
   });
-  const result = NextResponse.json(await response.json().catch(() => ({})), { status: response.status });
+  const payload = await response.text();
+  const result = new NextResponse(payload || null, {
+    status: response.status,
+    headers: { 'Content-Type': response.headers.get('content-type') ?? 'application/json' },
+  });
   result.cookies.delete('access_token');
   result.cookies.delete('refresh_token');
   return result;

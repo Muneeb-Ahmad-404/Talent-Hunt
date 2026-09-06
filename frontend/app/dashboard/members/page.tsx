@@ -1,32 +1,3 @@
-import { apiFetch } from '@/lib/api';
-
-export default async function MembersPage() {
-  const res = await apiFetch('/api/companies/members');
-  const data: { members: any[] } = await res.json();
-
-  return (
-    <div className="p-6">
-      <h1 className="text-2xl font-semibold mb-4">Team members</h1>
-      <table className="w-full text-sm border-collapse">
-        <thead>
-          <tr className="text-left border-b">
-            <th className="py-2 pr-4">Email</th>
-            <th className="py-2 pr-4">Role</th>
-            <th className="py-2">Joined</th>
-          </tr>
-        </thead>
-        <tbody>
-          {data.members.map((m) => (
-            <tr key={m.recruiterId} className="border-b">
-              <td className="py-2 pr-4">{m.email}</td>
-              <td className="py-2 pr-4 capitalize">{m.companyRole.replace('_', ' ')}</td>
-              <td className="py-2 text-gray-500">
-                {new Date(m.joinedAt).toLocaleDateString()}
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  );
-}
+'use client';
+import { useEffect, useState } from 'react';
+export default function MembersPage() { const [members, setMembers] = useState<any[]>([]); const [email, setEmail] = useState(''); const [role, setRole] = useState('member'); const [message, setMessage] = useState(''); async function load() { const r = await fetch('/api/companies/members'); const d = await r.json().catch(() => ({})); setMembers(d.members ?? []); } useEffect(() => { load(); }, []); async function invite(e: React.FormEvent) { e.preventDefault(); const r = await fetch('/api/companies/invitations', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, companyRole: role }) }); setMessage(r.ok ? 'Invitation sent.' : 'Could not send invitation.'); if (r.ok) setEmail(''); } return <main className="mx-auto max-w-6xl px-6 py-8 md:px-10"><div className="mb-8"><p className="text-sm font-medium text-primary">Company settings</p><h1 className="mt-1 text-3xl font-semibold tracking-tight">Team members</h1><p className="mt-2 text-muted-foreground">Invite collaborators and control access to your hiring workspace.</p></div><div className="grid gap-6 lg:grid-cols-[1fr_360px]"><section className="overflow-hidden rounded-2xl border bg-card"><div className="border-b px-5 py-4"><h2 className="font-semibold">Current members</h2></div><div className="divide-y">{members.length === 0 ? <p className="p-6 text-sm text-muted-foreground">No members found.</p> : members.map((member) => <div key={member.recruiterId} className="flex items-center justify-between gap-4 px-5 py-4"><div><p className="font-medium">{member.email}</p><p className="mt-1 text-xs capitalize text-muted-foreground">{String(member.companyRole ?? 'member').replaceAll('_', ' ')}</p></div><span className="rounded-full bg-muted px-2.5 py-1 text-xs text-muted-foreground">Active</span></div>)}</div></section><form onSubmit={invite} className="flex h-fit flex-col gap-4 rounded-2xl border bg-card p-6"><div><h2 className="font-semibold">Invite a member</h2><p className="mt-1 text-sm text-muted-foreground">They&apos;ll receive an invitation to join your company.</p></div><label className="flex flex-col gap-2 text-sm font-medium">Email<input required type="email" value={email} onChange={(e) => setEmail(e.target.value)} className="rounded-lg border bg-background px-3 py-2.5 font-normal outline-none focus:border-primary" placeholder="teammate@company.com" /></label><label className="flex flex-col gap-2 text-sm font-medium">Role<select value={role} onChange={(e) => setRole(e.target.value)} className="rounded-lg border bg-background px-3 py-2.5 font-normal"><option value="member">Member</option><option value="admin">Admin</option></select></label><button className="rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground">Send invitation</button>{message && <p className="text-sm text-muted-foreground">{message}</p>}</form></div></main>; }
