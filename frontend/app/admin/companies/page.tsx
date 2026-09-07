@@ -1,68 +1,9 @@
-import { cookies } from 'next/headers';
-import { verifyCompany, suspendCompany } from './actions';
+'use client'
+import { useEffect, useState } from 'react'
+import { apiRouter } from '@/lib/api'
 
-async function fetchCompanies(status?: string) {
-  const cookieStore = await cookies();
-  const token = cookieStore.get('access_token')?.value ?? '';
-  const url = status
-    ? `${process.env.NEXT_PUBLIC_API_URL}/api/admin/companies?status=${status}`
-    : `${process.env.NEXT_PUBLIC_API_URL}/api/admin/companies`;
-
-  const res = await fetch(url, {
-    headers: { Authorization: `Bearer ${token}` },
-    cache: 'no-store',
-  });
-  const data = await res.json();
-  return data.companies as Array<{
-    id: string; name: string; status: string; owner_email: string; created_at: string;
-  }>;
-}
-
-export default async function CompaniesPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ status?: string }>;
-}) {
-  const params = await searchParams;
-  
-  const companies = await fetchCompanies(params.status);
-
-  return (
-    <section>
-      <h1>Companies</h1>
-      <div>
-        <a href="/admin/companies">All</a>
-        <a href="/admin/companies?status=pending">Pending</a>
-        <a href="/admin/companies?status=verified">Verified</a>
-        <a href="/admin/companies?status=suspended">Suspended</a>
-      </div>
-      <table>
-        <thead>
-          <tr>
-            <th>Name</th><th>Status</th><th>Owner</th><th>Created</th><th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {companies.map((c) => (
-            <tr key={c.id}>
-              <td>{c.name}</td>
-              <td>{c.status}</td>
-              <td>{c.owner_email}</td>
-              <td>{new Date(c.created_at).toLocaleDateString()}</td>
-              <td>
-                <form action={verifyCompany}>
-                  <input type="hidden" name="id" value={c.id} />
-                  <button type="submit" disabled={c.status === 'verified'}>Verify</button>
-                </form>
-                <form action={suspendCompany}>
-                  <input type="hidden" name="id" value={c.id} />
-                  <button type="submit" disabled={c.status === 'suspended'}>Suspend</button>
-                </form>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </section>
-  );
-}
+type Company = { id: string; name: string; status: string; owner_email: string; created_at: string }
+export default function AdminCompanies() { const [items,setItems]=useState<Company[]>([]); const [status,setStatus]=useState(''); const [error,setError]=useState(''); const [busy,setBusy]=useState('')
+ async function load(){const r=await apiRouter.admin.companies(status?`?status=${status}`:'');const d=await r.json().catch(()=>({}));if(!r.ok)return setError(d.message??'Could not load companies');setItems(d.companies??[])} useEffect(()=>{load()},[status])
+ async function action(id:string,type:'verify'|'suspend'){setBusy(id);const r=type==='verify'?await apiRouter.admin.verifyCompany(id):await apiRouter.admin.suspendCompany(id);if(!r.ok)setError('Action failed. Please try again.');else load();setBusy('')}
+ return <section><div className="mb-7"><p className="text-sm font-semibold text-primary">Platform administration</p><h1 className="mt-2 text-3xl font-semibold">Companies</h1><p className="mt-2 text-muted-foreground">Review company access and maintain marketplace quality.</p></div><div className="mb-4 flex gap-2">{['','pending','verified','suspended'].map(x=><button key={x} onClick={()=>setStatus(x)} className={`rounded-full px-3 py-1.5 text-sm ${status===x?'bg-primary text-primary-foreground':'bg-card text-muted-foreground'}`}>{x||'All'}</button>)}</div>{error&&<p className="mb-4 rounded-lg bg-destructive/10 p-3 text-sm text-destructive">{error}</p>}<div className="overflow-x-auto rounded-xl border bg-card"><table className="w-full text-left text-sm"><thead className="border-b bg-muted/40 text-muted-foreground"><tr>{['Company','Owner','Status','Created','Actions'].map(x=><th key={x} className="px-5 py-3 font-medium">{x}</th>)}</tr></thead><tbody>{items.map(c=><tr key={c.id} className="border-b last:border-0"><td className="px-5 py-4 font-medium">{c.name}</td><td className="px-5 py-4 text-muted-foreground">{c.owner_email}</td><td className="px-5 py-4 capitalize">{c.status}</td><td className="px-5 py-4 text-muted-foreground">{new Date(c.created_at).toLocaleDateString()}</td><td className="flex gap-2 px-5 py-4"><button disabled={busy===c.id||c.status==='verified'} onClick={()=>action(c.id,'verify')} className="rounded-md bg-primary px-3 py-1.5 text-xs text-primary-foreground disabled:opacity-50">Verify</button><button disabled={busy===c.id||c.status==='suspended'} onClick={()=>action(c.id,'suspend')} className="rounded-md border px-3 py-1.5 text-xs disabled:opacity-50">Suspend</button></td></tr>)}</tbody></table>{!items.length&&<p className="p-10 text-center text-sm text-muted-foreground">No companies found.</p>}</div></section> }
