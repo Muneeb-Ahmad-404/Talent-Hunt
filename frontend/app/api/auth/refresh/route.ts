@@ -1,6 +1,6 @@
 import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
-import { apiFetch } from '@/lib/api';
+import { apiFetch } from '@/lib/api-server';
 
 export async function POST() {
   const cookieStore = await cookies();

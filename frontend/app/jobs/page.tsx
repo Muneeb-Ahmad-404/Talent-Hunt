@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { SiteFooter, SiteHeader } from '../../components/site-header';
-import { apiFetch } from '../../lib/api';
+import { apiFetch } from '../../lib/api-server';
 
 export default async function JobsPage() {
   const res = await apiFetch('/api/public/jobs');

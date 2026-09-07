@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { apiFetch } from '@/lib/api';
+import { apiFetch } from '@/lib/api-server';
 
 export async function GET() {
   const response = await apiFetch('/auth/me');

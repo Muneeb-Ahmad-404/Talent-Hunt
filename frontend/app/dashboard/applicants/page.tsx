@@ -1,4 +1,4 @@
-import { apiFetch } from '@/lib/api';
+import { apiFetch } from '@/lib/api-server';
 
 const columns = ['applied', 'screening', 'interview', 'offer', 'hired'];
 export default async function ApplicantsPage() {

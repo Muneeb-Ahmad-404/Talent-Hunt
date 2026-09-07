@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { apiFetch } from '@/lib/api';
+import { apiFetch } from '@/lib/api-server';
 
 const stages: Record<string, string> = { applied: 'bg-blue-50 text-blue-700', screening: 'bg-amber-50 text-amber-700', interview: 'bg-violet-50 text-violet-700', final_interview: 'bg-violet-50 text-violet-700', offer: 'bg-emerald-50 text-emerald-700', hired: 'bg-emerald-50 text-emerald-700', rejected: 'bg-rose-50 text-rose-700' };
 

@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { apiFetch } from '@/lib/api';
+import { apiFetch } from '@/lib/api-server';
 
 export default async function JobsPage({
   searchParams,

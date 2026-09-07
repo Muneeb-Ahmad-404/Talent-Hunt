@@ -1,4 +1,4 @@
-import { apiFetch } from '@/lib/api';
+import { apiFetch } from '@/lib/api-server';
 import JobActions from './JobActions';
 
 export default async function JobDetailPage({ 

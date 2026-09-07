@@ -1,4 +1,4 @@
-import { apiFetch } from '../../../lib/api';
+import { apiFetch } from '../../../lib/api-server';
 import Link from 'next/link';
 
 export default async function ShortlistPage() {
