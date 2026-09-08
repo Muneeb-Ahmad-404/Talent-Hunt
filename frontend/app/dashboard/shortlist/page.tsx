@@ -1,23 +1,9 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-import { apiFetch } from '../../../lib/api-server';
-import Link from 'next/link';
+import Link from 'next/link'
+import { apiFetch } from '../../../lib/api-server'
+
+type SavedJob = { id?: string; job_id?: string; title: string; company_name?: string; companyName?: string; status?: string; location?: string; employment_type?: string }
 
 export default async function ShortlistPage() {
-  const res = await apiFetch('/api/applicants/shortlist');
-  const data: { shortlist: any[] } = await res.json();
-
-  return (
-    <main>
-      <h1>My Shortlist</h1>
-      <ul>
-        {data.shortlist?.map((item) => (
-          <li key={item.id}>
-            <Link href={`/jobs/${item.job_id}`}>
-              {item.title} — {item.company_name}
-            </Link>
-          </li>
-        ))}
-      </ul>
-    </main>
-  );
+  const response = await apiFetch('/api/applicants/shortlist'); const data = await response.json().catch(() => ({})); const jobs: SavedJob[] = data.shortlist ?? data.jobs ?? []
+  return <main className="mx-auto max-w-6xl px-6 py-10 md:px-10"><div className="mb-10"><p className="text-sm font-semibold text-primary">Applicant workspace</p><h1 className="mt-2 text-4xl font-semibold tracking-tight">Saved jobs</h1><p className="mt-2 text-muted-foreground">Roles you saved for a closer look.</p></div>{jobs.length === 0 ? <div className="rounded-3xl border bg-card p-12 text-center"><h2 className="text-xl font-semibold">No saved jobs yet</h2><p className="mt-2 text-sm text-muted-foreground">Browse open roles and save the ones you want to revisit.</p><Link href="/jobs" className="mt-6 inline-flex rounded-xl bg-primary px-4 py-3 font-medium text-primary-foreground">Browse jobs</Link></div> : <div className="grid gap-5 md:grid-cols-2">{jobs.map((job) => <Link key={job.id ?? job.job_id} href={`/jobs/${job.id ?? job.job_id}`} className="rounded-3xl border bg-card p-6 transition hover:-translate-y-0.5 hover:shadow-md"><div className="flex items-start justify-between gap-4"><div><h2 className="text-xl font-semibold">{job.title}</h2><p className="mt-1 text-sm text-muted-foreground">{job.company_name ?? job.companyName}</p></div><span className="rounded-full bg-muted px-3 py-1 text-xs capitalize">{job.status ?? 'Saved'}</span></div><div className="mt-6 flex flex-wrap gap-2 text-sm text-muted-foreground"><span>{job.location ?? 'Location flexible'}</span>{job.employment_type && <span>• {String(job.employment_type).replaceAll('_', ' ')}</span>}</div><p className="mt-5 text-sm font-medium text-primary">View job →</p></Link>)}</div>}</main>
 }

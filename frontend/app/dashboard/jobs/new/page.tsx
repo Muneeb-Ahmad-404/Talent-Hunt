@@ -1,80 +1,19 @@
-'use client';
+'use client'
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { FormEvent, useState } from 'react'
+import { useRouter } from 'next/navigation'
+import { apiRouter } from '@/lib/api'
 
 export default function NewJobPage() {
-  const router = useRouter();
-  const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
-
-  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    setLoading(true);
-    setError(null);
-
-    const form = new FormData(e.currentTarget);
-    const fields = ['title', 'description', 'location', 'employment_type'];
-    const body = Object.fromEntries(
-      fields
-        .map(key => [key, (form.get(key) as string)?.trim()])
-        .filter(([_, value]) => value)  // Remove empty strings
-    );
-
-    // Client component calls a Next.js API route (not the backend directly)
-    // to keep the token in httpOnly cookies
-    const res = await fetch('/api/jobs', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body),
-    });
-
-    if (res.ok) {
-      const { jobId } = await res.json();
-      router.push(`/dashboard/jobs/${jobId}`);
-    } else {
-      const data = await res.json();
-      const errorMessage = data.error?.message || data.message || 'Something went wrong.';
-      setError(errorMessage);
-    }
-    setLoading(false);
+  const router = useRouter(); const [error, setError] = useState(''); const [loading, setLoading] = useState(false)
+  async function submit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault(); setLoading(true); setError('')
+    const form = new FormData(event.currentTarget)
+    const body = { title: String(form.get('title') ?? '').trim(), description: String(form.get('description') ?? '').trim(), deadline: form.get('deadline') ? `${form.get('deadline')}T23:59:59.000Z` : undefined, location: String(form.get('location') ?? '').trim() || undefined, employment_type: String(form.get('employment_type') ?? '') || undefined, salary_min: form.get('salary_min') ? Number(form.get('salary_min')) : undefined, salary_max: form.get('salary_max') ? Number(form.get('salary_max')) : undefined, attributes: { seniority: String(form.get('seniority') ?? '').trim() || undefined, work_mode: String(form.get('work_mode') ?? '').trim() || undefined }, screening_questions: String(form.get('screening_questions') ?? '').split('\n').map((text) => text.trim()).filter(Boolean).map((text) => ({ text, type: 'text', required: true })) }
+    const response = await apiRouter.jobs.create(body); const data = await response.json().catch(() => ({}))
+    if (!response.ok) setError(data.error?.message ?? data.message ?? 'Could not create job.')
+    else router.push(`/dashboard/jobs/${data.jobId ?? data.id}`)
+    setLoading(false)
   }
-
-  return (
-    <div className="p-6 max-w-xl">
-      <h1 className="text-2xl font-semibold mb-6">Post a job</h1>
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div>
-          <label className="block text-sm font-medium mb-1">Title *</label>
-          <input name="title" required className="w-full border rounded px-3 py-2 text-sm" />
-        </div>
-        <div>
-          <label className="block text-sm font-medium mb-1">Description</label>
-          <textarea name="description" rows={5} className="w-full border rounded px-3 py-2 text-sm" />
-        </div>
-        <div>
-          <label className="block text-sm font-medium mb-1">Location</label>
-          <input name="location" className="w-full border rounded px-3 py-2 text-sm" />
-        </div>
-        <div>
-          <label className="block text-sm font-medium mb-1">Employment type</label>
-          <select name="employment_type" className="w-full border rounded px-3 py-2 text-sm">
-            <option value="">— select —</option>
-            <option value="full_time">Full-time</option>
-            <option value="part_time">Part-time</option>
-            <option value="contract">Contract</option>
-            <option value="internship">Internship</option>
-          </select>
-        </div>
-        {error && <p className="text-red-600 text-sm">{error}</p>}
-        <button
-          type="submit"
-          disabled={loading}
-          className="bg-blue-600 text-white px-4 py-2 rounded text-sm disabled:opacity-50"
-        >
-          {loading ? 'Saving…' : 'Save as draft'}
-        </button>
-      </form>
-    </div>
-  );
+  return <main className="mx-auto max-w-5xl px-6 py-10 md:px-10"><div className="mb-8"><p className="text-sm font-semibold text-primary">Recruiting workspace</p><h1 className="mt-2 text-4xl font-semibold tracking-tight">Post a job</h1><p className="mt-2 text-muted-foreground">Add the details candidates need to decide whether this role is right for them.</p></div><form onSubmit={submit} className="grid gap-6 lg:grid-cols-[1fr_320px]"><section className="flex flex-col gap-5 rounded-3xl border bg-card p-6"><label className="flex flex-col gap-2 text-sm font-medium">Job title<input name="title" required className="rounded-xl border bg-background px-3 py-3" placeholder="Senior Product Designer" /></label><label className="flex flex-col gap-2 text-sm font-medium">Description<textarea name="description" required rows={10} className="rounded-xl border bg-background px-3 py-3" placeholder="Describe the role, responsibilities, and team." /></label><label className="flex flex-col gap-2 text-sm font-medium">Screening questions<span className="text-xs font-normal text-muted-foreground">One question per line.</span><textarea name="screening_questions" rows={5} className="rounded-xl border bg-background px-3 py-3" /></label></section><aside className="flex h-fit flex-col gap-5 rounded-3xl border bg-card p-6"><label className="flex flex-col gap-2 text-sm font-medium">Location<input name="location" className="rounded-xl border bg-background px-3 py-3" placeholder="Remote / New York" /></label><label className="flex flex-col gap-2 text-sm font-medium">Employment type<select name="employment_type" className="rounded-xl border bg-background px-3 py-3"><option value="full_time">Full-time</option><option value="part_time">Part-time</option><option value="contract">Contract</option><option value="internship">Internship</option></select></label><label className="flex flex-col gap-2 text-sm font-medium">Work mode<input name="work_mode" className="rounded-xl border bg-background px-3 py-3" placeholder="Remote, hybrid, onsite" /></label><label className="flex flex-col gap-2 text-sm font-medium">Seniority<input name="seniority" className="rounded-xl border bg-background px-3 py-3" placeholder="Mid-level" /></label><div className="grid grid-cols-2 gap-3"><label className="flex flex-col gap-2 text-sm font-medium">Min salary<input name="salary_min" type="number" min="1" className="rounded-xl border bg-background px-3 py-3" /></label><label className="flex flex-col gap-2 text-sm font-medium">Max salary<input name="salary_max" type="number" min="1" className="rounded-xl border bg-background px-3 py-3" /></label></div><label className="flex flex-col gap-2 text-sm font-medium">Application deadline<input name="deadline" type="date" className="rounded-xl border bg-background px-3 py-3" /></label>{error && <p className="text-sm text-destructive">{error}</p>}<button disabled={loading} className="rounded-xl bg-primary px-4 py-3 font-medium text-primary-foreground disabled:opacity-60">{loading ? 'Saving…' : 'Save draft'}</button></aside></form></main>
 }
