@@ -1,4 +1,5 @@
 'use client'
+/* eslint-disable react-hooks/set-state-in-effect */
 import { useEffect, useState } from 'react'
 import { apiRouter } from '@/lib/api'
 type User={id:string;email:string;status:string;role:string;created_at:string}

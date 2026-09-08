@@ -1,8 +1,6 @@
 import { cookies } from 'next/headers'
 import { NextRequest, NextResponse } from 'next/server'
 
-const methods = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'] as const
-
 async function forward(request: NextRequest, path: string[]) {
   const target = `${process.env.API_URL}/api/${path.join('/')}${request.nextUrl.search}`
   const cookieStore = await cookies()

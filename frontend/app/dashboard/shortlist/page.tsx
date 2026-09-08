@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { apiFetch } from '../../../lib/api-server';
 import Link from 'next/link';
 

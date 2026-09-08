@@ -1,4 +1,5 @@
 'use client'
+/* eslint-disable react-hooks/set-state-in-effect */
 import { useEffect, useState } from 'react'
 import { apiRouter } from '@/lib/api'
 type Job={id:string;title:string;status:string;company_name:string;created_at:string}
