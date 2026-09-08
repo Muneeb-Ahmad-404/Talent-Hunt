@@ -63,7 +63,7 @@ export default function DashboardPage() {
         <div className="rounded-2xl border bg-card p-6">
           <p className="text-sm text-muted-foreground">Account access</p>
           <p className="mt-3 text-lg font-semibold">{userRole === 'applicant' ? 'Candidate' : userRole === 'admin' ? 'Platform admin' : 'Company member'}</p>
-          <p className="mt-2 text-sm leading-6 text-muted-foreground">Your navigation and actions are limited to the permissions returned by the backend.</p>
+          <p className="mt-2 text-sm leading-6 text-muted-foreground">Personal tools and company workspaces available to you.</p>
         </div>
       </section>
 
