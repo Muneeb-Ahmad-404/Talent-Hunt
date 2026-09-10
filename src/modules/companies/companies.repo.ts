@@ -13,6 +13,7 @@ export interface Company {
   id: string;
   name: string;
   status: string;
+  companyRole?: string;
 }
 
 // ISOLATION RULE: Every company-scoped query must include company_id from

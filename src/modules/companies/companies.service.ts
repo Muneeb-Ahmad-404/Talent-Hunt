@@ -28,7 +28,7 @@ export async function getMyCompany(userId: string): Promise<Company> {
         throw new NotFoundError('Company not found');
   }
 
-  return company;
+  return { ...company, companyRole: recruiter.companyRole };
 }
 
 export async function openWorkspace(userId: string, input: CreateCompanyInput) {
