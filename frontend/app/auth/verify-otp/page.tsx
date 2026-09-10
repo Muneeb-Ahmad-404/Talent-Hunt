@@ -44,7 +44,7 @@ export default function VerifyOtpPage() {
         <h1 className="mt-2 text-3xl font-semibold tracking-tight">Verify your email</h1>
         <p className="mt-2 text-sm leading-6 text-muted-foreground">Enter the six-digit code sent to your email address.</p>
         <form onSubmit={submit} className="mt-8 flex flex-col gap-5">
-          <label className="flex flex-col gap-2 text-sm font-medium">Email<input required type="email" value={email} onChange={(event) => setEmail(event.target.value)} className="rounded-xl border bg-background px-3 py-3" /></label>
+          <label className="flex flex-col gap-2 text-sm font-medium">Email<input required readOnly={Boolean(email)} type="email" value={email} onChange={(event) => setEmail(event.target.value)} className="rounded-xl border bg-background px-3 py-3 read-only:cursor-not-allowed read-only:opacity-70" /></label>
           <label className="flex flex-col gap-2 text-sm font-medium">Verification code<input required inputMode="numeric" pattern="[0-9]{6}" maxLength={6} value={otp} onChange={(event) => setOtp(event.target.value.replace(/\D/g, ''))} className="rounded-xl border bg-background px-3 py-3 tracking-[0.35em]" /></label>
           {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
           {message && <p className="text-sm text-primary">{message}</p>}

@@ -6,6 +6,7 @@ async function refreshAccessToken() {
       method: 'POST',
       credentials: 'include',
       headers: { Accept: 'application/json' },
+      body: JSON.stringify({}),
     })
       .then((response) => response.ok)
       .catch(() => false)

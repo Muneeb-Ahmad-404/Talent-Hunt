@@ -16,7 +16,20 @@ export default function SignupPage() {
     const form = new FormData(event.currentTarget)
     const response = await apiRouter.auth.register({ email: form.get('email'), password: form.get('password'), role })
     const data = await response.json().catch(() => ({}))
-    if (!response.ok) { setError(data.error?.message ?? data.message ?? 'Could not create account.'); setPending(false); return }
+    if (!response.ok) {
+      const message = data.error?.message ?? data.message ?? 'Could not create account.'
+      if (response.status === 409 || /already taken|already exists|pending verification/i.test(message)) {
+        const email = String(form.get('email') ?? '')
+        const resend = await apiRouter.auth.resendVerification({ email })
+        if (resend.ok) {
+          router.push(`/auth/verify-otp?email=${encodeURIComponent(email)}`)
+          return
+        }
+      }
+      setError(message)
+      setPending(false)
+      return
+    }
     router.push(`/auth/verify-otp?email=${encodeURIComponent(String(form.get('email') ?? ''))}`)
   }
 
