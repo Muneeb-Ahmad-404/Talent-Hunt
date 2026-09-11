@@ -1,19 +1,40 @@
-import { cookies } from 'next/headers';
+export async function readApiError(response: Response): Promise<string> {
+  try {
+    const data = await response.json();
+    return data?.error?.message ?? data?.message ?? data?.error ?? 'Request failed';
+  } catch {
+    return response.statusText || 'Request failed';
+  }
+}
 
-const API_URL = process.env.API_URL;
+let refreshInProgress: Promise<Response> | null = null;
 
-export async function apiFetch(
-  path: string,
-  options: RequestInit = {},
-): Promise<Response> {
-  const cookieStore = await cookies();
-  const token = cookieStore.get('access_token')?.value;
-  return fetch(`${API_URL}${path}`, {
+async function refreshSession(): Promise<Response> {
+  if (!refreshInProgress) {
+    refreshInProgress = fetch('/api/auth/refresh', { method: 'POST', credentials: 'include' })
+      .finally(() => { refreshInProgress = null; });
+  }
+  return refreshInProgress;
+}
+
+export async function clientApiFetch(path: string, options: RequestInit = {}): Promise<Response> {
+  const response = await fetch(path, {
     ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      ...options.headers,
-    },
+    credentials: 'include',
+    headers: { 'Content-Type': 'application/json', ...options.headers },
   });
+
+  if (response.status === 401) {
+    const refresh = await refreshSession();
+    if (refresh.ok) {
+      return fetch(path, {
+        ...options,
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json', ...options.headers },
+      });
+    }
+    window.location.assign('/login');
+  }
+
+  return response;
 }

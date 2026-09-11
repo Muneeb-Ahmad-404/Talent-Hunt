@@ -1,48 +1,12 @@
-'use client';
-import { useState } from 'react';
+import { apiFetch } from '@/lib/server-api';
+import ProfileEditor from './ProfileEditor';
+import ResumeUpload from './ResumeUpload';
+import { ErrorState } from '@/components/ui-states';
+import { PageHeader, PageShell, Card } from '@/components/ui';
 
-export default function ProfilePage() {
-  const [uploading, setUploading] = useState(false);
-  const [message, setMessage] = useState<string | null>(null);
-
-  async function handleResumeUpload(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    setUploading(true);
-    try {
-      // Step 1: get presigned URL
-      const { uploadUrl, key } = await fetch('/api/applicants/profile/resume-upload', {
-        method: 'POST',
-      }).then((r) => r.json());
-
-      // Step 2: PUT directly to S3/MinIO
-      await fetch(uploadUrl, {
-        method: 'PUT',
-        body: file,
-        headers: { 'Content-Type': 'application/pdf' },
-      });
-
-      // Step 3: confirm
-      await fetch('/api/applicants/profile/resume', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ key, filename: file.name }),
-      });
-
-      setMessage('Résumé uploaded successfully');
-    } catch {
-      setMessage('Upload failed — please try again');
-    } finally {
-      setUploading(false);
-    }
-  }
-
-  return (
-    <main>
-      <h1>My Profile</h1>
-      <input type="file" accept="application/pdf" onChange={handleResumeUpload} disabled={uploading} />
-      {message && <p>{message}</p>}
-    </main>
-  );
+export default async function ProfilePage() {
+  const response = await apiFetch('/api/applicants/profile');
+  if (!response.ok) return <main className="p-6"><ErrorState message="Unable to load your profile." /></main>;
+  const profile = await response.json();
+  return <PageShell className="max-w-4xl"><PageHeader eyebrow="Applicant profile" title="Your profile" description="Keep your professional story current for the opportunities you care about." /><div className="space-y-5"><ProfileEditor profile={profile} /><Card className="p-6"><h2 className="font-semibold text-slate-950">Resume</h2><p className="mt-1 text-sm text-slate-500">Upload a PDF resume to include it with future applications.</p><div className="mt-5"><ResumeUpload /></div></Card></div></PageShell>;
 }

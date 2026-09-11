@@ -1,23 +1,21 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
-import { cookies } from 'next/headers';
+import { getCurrentUser } from '@/lib/session';
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
-  const cookieStore = await cookies()
-  const token = cookieStore.get('access_token')?.value;
-  if (!token) redirect('/login');
-  return (
-    <div className="flex min-h-screen">
-      <nav className="w-48 border-r p-4 space-y-2">
-        <p className="text-xs font-semibold uppercase text-gray-400 mb-3">Company</p>
-        <Link href="/dashboard/jobs" className="block text-sm hover:text-blue-600">
-          Jobs
-        </Link>
-        <Link href="/dashboard/members" className="block text-sm hover:text-blue-600">
-          Members
-        </Link>
-      </nav>
-      <main className="flex-1">{children}</main>
-    </div>
-  );
+  const user = await getCurrentUser();
+  if (!user) redirect('/login');
+  const isApplicant = user.role === 'applicant';
+  const membership = user.memberships[0];
+  const links = isApplicant
+    ? [['/jobs', 'Browse jobs'], ['/dashboard/applications', 'My applications'], ['/dashboard/shortlist', 'Shortlist'], ['/dashboard/profile', 'Profile']]
+    : [['/dashboard/company', 'Workspace'], ['/dashboard/jobs', 'Jobs'], ['/dashboard/applications', 'Applications'], ...(['owner', 'hr_manager'].includes(membership?.companyRole ?? '') ? [['/dashboard/members', 'Members']] : [])];
+  return <div className="min-h-screen bg-slate-50 lg:flex">
+    <aside className="border-b border-slate-200 bg-white lg:min-h-screen lg:w-64 lg:border-b-0 lg:border-r">
+      <div className="flex items-center justify-between px-5 py-5 lg:block lg:px-6"><Link href="/" className="text-lg font-bold tracking-tight text-slate-950">Talent Hunt<span className="text-indigo-600">.</span></Link><span className="ml-3 rounded-full bg-indigo-50 px-2.5 py-1 text-xs font-semibold capitalize text-indigo-700 lg:ml-0 lg:mt-5 lg:block lg:w-fit">{isApplicant ? 'Applicant' : membership?.companyRole?.replace('_', ' ') ?? 'Recruiter'}</span></div>
+      <nav className="flex gap-1 overflow-x-auto px-4 pb-4 lg:block lg:space-y-1 lg:px-4" aria-label="Primary navigation">{links.map(([href, label]) => <Link key={href} href={href} className="whitespace-nowrap rounded-lg px-3 py-2 text-sm font-medium text-slate-600 transition hover:bg-indigo-50 hover:text-indigo-700">{label}</Link>)}</nav>
+      <form action="/api/auth/logout" method="post" className="hidden px-7 pb-6 lg:block"><button className="text-sm font-medium text-slate-400 hover:text-rose-600" type="submit">Sign out</button></form>
+    </aside>
+    <div className="min-w-0 flex-1"><header className="hidden h-16 items-center justify-end border-b border-slate-200 bg-white px-8 lg:flex"><span className="text-sm text-slate-500">{user.email}</span></header><main>{children}</main></div>
+  </div>;
 }

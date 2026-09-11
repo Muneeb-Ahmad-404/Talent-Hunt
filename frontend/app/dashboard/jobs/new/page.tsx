@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { clientApiFetch, readApiError } from '@/lib/api';
 
 export default function NewJobPage() {
   const router = useRouter();
@@ -23,7 +24,7 @@ export default function NewJobPage() {
 
     // Client component calls a Next.js API route (not the backend directly)
     // to keep the token in httpOnly cookies
-    const res = await fetch('/api/jobs', {
+    const res = await clientApiFetch('/api/jobs', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body),
@@ -33,9 +34,7 @@ export default function NewJobPage() {
       const { jobId } = await res.json();
       router.push(`/dashboard/jobs/${jobId}`);
     } else {
-      const data = await res.json();
-      const errorMessage = data.error?.message || data.message || 'Something went wrong.';
-      setError(errorMessage);
+      setError(await readApiError(res));
     }
     setLoading(false);
   }

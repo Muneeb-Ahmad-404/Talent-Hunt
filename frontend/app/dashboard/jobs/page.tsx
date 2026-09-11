@@ -1,5 +1,7 @@
 import Link from 'next/link';
-import { apiFetch } from '@/lib/api';
+import { apiFetch } from '@/lib/server-api';
+import type { CompanyJob } from '@/lib/types';
+import { getCurrentUser } from '@/lib/session';
 
 export default async function JobsPage({
   searchParams,
@@ -10,16 +12,14 @@ export default async function JobsPage({
   const params = new URLSearchParams(await searchParams);
   params.set('limit', '20');
 
-  const res = await apiFetch(`/api/jobs?${params.toString()}`);
-  const data: { jobs: any[]; nextCursor: string | null } = await res.json();
+  const [res, user] = await Promise.all([apiFetch(`/api/jobs?${params.toString()}`), getCurrentUser()]);
+  const data: { jobs: CompanyJob[]; nextCursor: string | null } = await res.json();
 
   return (
     <div className="p-6">
       <div className="flex justify-between items-center mb-4">
         <h1 className="text-2xl font-semibold">Jobs</h1>
-        <Link href="/dashboard/jobs/new" className="bg-blue-600 text-white px-4 py-2 rounded">
-          Post a job
-        </Link>
+        {['owner', 'hr_manager', 'recruiter'].includes(user?.memberships[0]?.companyRole ?? '') && <Link href="/dashboard/jobs/new" className="bg-blue-600 text-white px-4 py-2 rounded">Post a job</Link>}
       </div>
 
       {/* Status filter */}
