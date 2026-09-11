@@ -40,23 +40,46 @@ export async function register(
   input: RegisterInput,
 ): Promise<{ id: string; email: string; role: string }> {
   const existing = await findUserByEmail(input.email);
+
   if (existing) {
-    throw new ConflictError('Email already taken');
+    if (existing.status === 'active') {
+      throw new ConflictError('Email already taken');
+    }
+
+    if (existing.status === 'unverified') {
+      await issueVerificationOtp(existing.id, existing.email);
+
+      return {
+        id: existing.id,
+        email: existing.email,
+        role: existing.role,
+      };
+    }
   }
 
   const passwordHash = await hashPassword(input.password);
 
-  const user = await createUser(input.email, passwordHash, input.role);
+  const user = await createUser(
+    input.email,
+    passwordHash,
+    input.role,
+  );
 
+  await issueVerificationOtp(user.id, user.email);
+
+  return user;
+}
+
+async function issueVerificationOtp(userId: string, email: string) {
   const otp = generateOtp();
   const otpHash = hashOtp(otp);
-  const expiresAt = new Date(Date.now() + config.OTP_EXPIRES_IN_MINUTES * 60 * 1000);
 
-  await createEmailVerification(user.id, otpHash, expiresAt);
+  const expiresAt = new Date(
+    Date.now() + config.OTP_EXPIRES_IN_MINUTES * 60 * 1000,
+  );
 
-  await sendVerificationEmail(input.email, otp);
-
-  return user
+  await createEmailVerification(userId, otpHash, expiresAt);
+  await sendVerificationEmail(email, otp);
 }
 
 export async function login(input: LoginInput,): Promise<{ id: string; email: string; role: string; accessToken: string, refreshToken: string }> {
@@ -68,7 +91,7 @@ export async function login(input: LoginInput,): Promise<{ id: string; email: st
   }
 
   if (user.status === 'unverified') {
-    throw new UnauthorizedError('Email not verified');
+      throw new UnauthorizedError('Invalid email or password');
   }
   if (user.status === 'suspended') {
     throw new UnauthorizedError('Account suspended');

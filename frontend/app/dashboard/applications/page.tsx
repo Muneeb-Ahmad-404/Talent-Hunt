@@ -6,6 +6,24 @@ import { PageHeader, PageShell } from '@/components/ui';
 
 export default async function ApplicationsPage() {
   const user = await getCurrentUser();
-  if (!user) redirect('/login');
-  return user.role === 'recruiter' ? <PageShell><PageHeader eyebrow="Recruiting workspace" title="Application pipeline" description="Review candidates, keep decisions moving, and schedule the next conversation." /><RecruiterPipeline /></PageShell> : <ApplicantApplications />;
+
+  if (!user) {
+    redirect('/login');
+  }
+
+  if (user.role === 'recruiter') {
+    return (
+      <PageShell>
+        <PageHeader
+          eyebrow="Recruiting workspace"
+          title="Application pipeline"
+          description="Review candidates, move applications through the hiring process, and schedule the next conversation."
+        />
+
+        <RecruiterPipeline />
+      </PageShell>
+    );
+  }
+
+  return <ApplicantApplications />;
 }
