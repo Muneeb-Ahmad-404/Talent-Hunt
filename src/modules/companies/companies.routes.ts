@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { authMiddleware } from '../../shared/auth-middleware';
 import { requireRole } from '../../shared/require-role';
 import { getMyCompany, openWorkspace, inviteMember, getMembers, changeMemberRole, deleteMember } from './companies.service';
+import { requireCompanyMember } from '../../shared/company-member';
 import { validateBody } from '../../shared/validate';
 import { createCompanySchema, inviteMemberSchema, updateMemberSchema } from './companies.schema';
 
@@ -14,16 +15,7 @@ router.get('/', (_req, res) => {
   res.status(501).json({ error: 'Not Implemented' });
 });
 
-router.get('/me', async (req, res, next) => {
-  try {
-    const company = await getMyCompany(req.user!.userId);
-    res.json(company);
-  } catch (err) {
-    next(err);
-  }
-});
-
-router.post('/', async (req, res, next) => {
+router.post('/', requireRole('recruiter'), async (req, res, next) => {
   try {
     const input = validateBody(createCompanySchema, req.body);
     const result = await openWorkspace(req.user!.userId, input);
@@ -32,6 +24,17 @@ router.post('/', async (req, res, next) => {
       name: result.name,
       status: 'pending',
     });
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.use(requireCompanyMember);
+
+router.get('/me', async (req, res, next) => {
+  try {
+    const company = await getMyCompany(req.user!.userId);
+    res.json(company);
   } catch (err) {
     next(err);
   }

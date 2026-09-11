@@ -4,13 +4,14 @@ import { createJobSchema, listCompanyJobsSchema } from "./jobs.schema";
 import { closeJob, editJob, getCompanyJobs, getJobDetails, postJob, publishJob } from "./jobs.service";
 import { authMiddleware } from "../../shared/auth-middleware";
 import { requireRole } from "../../shared/require-role";
+import { requireCompanyMember } from "../../shared/company-member";
 import { getRecruiterCompany } from "../companies/companies.repo";
 import { NotFoundError } from "../../shared/errors";
 import { assertJobOwnership } from "./jobs.repo";
 
 const router = Router()
 
-router.use(authMiddleware, requireRole('recruiter'));
+router.use(authMiddleware, requireRole('recruiter'), requireCompanyMember);
 
 router.get('/:id', async (req, res, next) => {
   try {

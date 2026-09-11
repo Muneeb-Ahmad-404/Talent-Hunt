@@ -12,6 +12,7 @@ import {
   deleteRefreshTokenByHash,
   deleteAllRefreshTokensForUser,
   findUserById,
+  listUserMemberships,
   createUser
 } from './auth.repo';
 
@@ -227,5 +228,13 @@ export async function getUser(userId: string) {
     return;
   }
 
-  return user;
+  const memberships = await listUserMemberships(userId);
+
+  return {
+    id: user.id,
+    email: user.email,
+    role: user.role,
+    status: user.status,
+    memberships,
+  };
 }
