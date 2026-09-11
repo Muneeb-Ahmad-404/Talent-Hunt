@@ -21,7 +21,13 @@ export default function LoginPage() {
     });
 
     if (res.ok) {
-      router.push('/dashboard/jobs');
+      const session = await fetch('/api/auth/me', { credentials: 'include' });
+      if (!session.ok) {
+        setError('Login succeeded, but your session could not be loaded.');
+        return;
+      }
+      const { user } = await session.json();
+      router.push(user.role === 'admin' ? '/admin' : user.role === 'recruiter' ? '/dashboard/company' : '/dashboard');
     } else {
       const data = await res.json();
       setError(data.error?.message || 'Login failed');
