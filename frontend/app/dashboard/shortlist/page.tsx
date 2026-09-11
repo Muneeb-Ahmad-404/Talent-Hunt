@@ -7,7 +7,7 @@ import { EmptyState, ErrorState } from '@/components/ui-states';
 export default async function ShortlistPage() {
   const res = await apiFetch('/api/applicants/shortlist');
 
-  if (!res.ok) {
+  if (!res.ok && res.status !== 404) { 
     return (
       <PageShell>
         <PageHeader
@@ -20,7 +20,7 @@ export default async function ShortlistPage() {
     );
   }
 
-  const data: { shortlist: ShortlistItem[] } = await res.json();
+  const data: { shortlist?: ShortlistItem[] } = res.status === 404 ? {} : await res.json();
   const shortlist = data.shortlist ?? [];
 
   return (

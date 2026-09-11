@@ -6,21 +6,32 @@ import { PageHeader, PageShell, Card } from '@/components/ui';
 
 export default async function ProfilePage() {
   const response = await apiFetch('/api/applicants/profile');
-
-  if (!response.ok) {
-    return (
-      <PageShell>
-        <PageHeader
-          eyebrow="Applicant profile"
-          title="Your profile"
-          description="Keep your professional information current so every new application starts from the right details."
-        />
-        <ErrorState message="Unable to load your profile." />
-      </PageShell>
-    );
-  }
-
   const profile = await response.json();
+  
+  <section>
+    <div className="mb-3">
+      <h2 className="text-sm font-semibold text-slate-900">
+        Professional information
+      </h2>
+      <p className="mt-1 text-sm text-slate-500">
+        Keep your headline, bio, and skills up to date.
+      </p>
+    </div>
+
+    {profile ? (
+      <ProfileEditor profile={profile} />
+    ) : (
+      <Card className="p-6">
+        <p className="font-medium text-slate-900">
+          Your profile isn't set up yet
+        </p>
+        <p className="mt-1 text-sm leading-6 text-slate-500">
+          Add your professional information to make your profile ready for
+          future applications.
+        </p>
+      </Card>
+    )}
+  </section>
 
   return (
     <PageShell className="max-w-4xl">

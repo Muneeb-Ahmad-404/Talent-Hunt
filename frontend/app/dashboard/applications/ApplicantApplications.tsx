@@ -7,7 +7,7 @@ import Link from 'next/link';
 export default async function ApplicantApplications() {
   const response = await apiFetch('/api/applicants/applications');
 
-  if (!response.ok) {
+  if (!response.ok && response.status !== 404) {
     return (
       <PageShell>
         <PageHeader
@@ -20,8 +20,7 @@ export default async function ApplicantApplications() {
     );
   }
 
-  const { applications }: { applications: Application[] } =
-    await response.json();
+  const { applications = [] }: { applications?: Application[] } = response.status === 404 ? {} : await response.json();
 
   return (
     <PageShell>

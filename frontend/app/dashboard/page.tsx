@@ -23,7 +23,10 @@ export default async function ApplicantDashboard() {
     apiFetch('/api/applicants/profile'),
   ]);
 
-  if (!applicationsResponse.ok || !shortlistResponse.ok) {
+  if (
+    (!applicationsResponse.ok && applicationsResponse.status !== 404) ||
+    (!shortlistResponse.ok && shortlistResponse.status !== 404)
+  ) {
     return (
       <PageShell>
         <ErrorState message="We couldn't load your dashboard right now." />
@@ -31,11 +34,15 @@ export default async function ApplicantDashboard() {
     );
   }
 
-  const { applications }: { applications: Application[] } =
-    await applicationsResponse.json();
+  const { applications = [] }: { applications?: Application[] } =
+    applicationsResponse.status === 404
+      ? {}
+      : await applicationsResponse.json();
 
-  const { shortlist }: { shortlist: ShortlistItem[] } =
-    await shortlistResponse.json();
+  const { shortlist = [] }: { shortlist?: ShortlistItem[] } =
+    shortlistResponse.status === 404
+      ? {}
+      : await shortlistResponse.json();
 
   const profile = profileResponse.ok
     ? await profileResponse.json()
