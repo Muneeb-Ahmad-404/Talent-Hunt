@@ -31,7 +31,7 @@ export async function recruiterCompanyId(userId: string){
     `SELECT company_id FROM recruiters WHERE user_id = $1`,
     [userId]
     );
-    return member.rows[0].company_id ?? null;
+    return member.rows[0]?.company_id ?? null;
 }
 
 export async function findApplicationWithApplicant(

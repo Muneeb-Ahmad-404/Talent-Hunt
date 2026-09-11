@@ -6,8 +6,10 @@ import { config } from '../../shared/config';
 
 export interface RecruiterCompany {
   companyId: string;
-  companyRole: string;
+  companyRole: CompanyRole;
 }
+
+export type CompanyRole = 'owner' | 'hr_manager' | 'recruiter' | 'hiring_manager';
 
 export interface Company {
   id: string;
@@ -23,7 +25,7 @@ export interface Company {
 export async function getRecruiterCompany(
   userId: string,
 ): Promise<RecruiterCompany | null> {
-  const result = await db.query<{ company_id: string; company_role: string }>(
+  const result = await db.query<{ company_id: string; company_role: CompanyRole }>(
     `SELECT r.company_id, r.company_role
      FROM recruiters r
      WHERE r.user_id = $1`,

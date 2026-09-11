@@ -12,6 +12,7 @@ import {
   getMemberById,
   listCompanyMembers,
   removeMember,
+  type CompanyRole,
 } from './companies.repo';
 import type { CreateCompanyInput, InviteMemberInput, UpdateMemberInput } from './companies.schema';
 
@@ -58,7 +59,7 @@ export async function inviteMember(userId: string, input: InviteMemberInput) {
   await sendInvitationEmail(input.email, rawToken);
 }
 
-export function assertCompanyRole(companyRole: string, allowed: string[]) {
+export function assertCompanyRole(companyRole: CompanyRole, allowed: CompanyRole[]) {
   if (!allowed.includes(companyRole)) {
     throw new ForbiddenError('You do not have permission to perform this action.');
   }
@@ -102,7 +103,7 @@ export async function deleteMember(userId: string, recruiterId: string) {
   const company = await getRecruiterCompany(userId);
   if (!company) throw new ForbiddenError('No company workspace found.');
 
-  assertCompanyRole(company.companyRole, ['owner', 'hr_manager']);
+  assertCompanyRole(company.companyRole, ['owner']);
 
   const member = await getMemberById(recruiterId, company.companyId);
   if (!member) throw new NotFoundError('Member not found.');
@@ -111,7 +112,7 @@ export async function deleteMember(userId: string, recruiterId: string) {
     throw new ForbiddenError('You cannot remove yourself from the company.');
   }
 
-  if(member.companyRole === "owner"){
+  if (member.companyRole === 'owner') {
     throw new ForbiddenError('You cannot remove the company owner');
   }
 

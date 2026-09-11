@@ -9,6 +9,15 @@ export interface UserRow {
   status:        'active' | 'inactive' | 'unverified' | 'suspended';
 }
 
+export interface UserMembership {
+  recruiterId: string;
+  companyId: string;
+  companyName: string;
+  companyStatus: string;
+  companyRole: 'owner' | 'hr_manager' | 'recruiter' | 'hiring_manager';
+  joinedAt: Date;
+}
+
 export async function findUserByEmail(email: string): Promise<UserRow | null> {
   const { rows } = await db.query<UserRow>(
     'SELECT id, email, password_hash, role, status FROM users WHERE email = $1',
@@ -23,6 +32,25 @@ export async function findUserById(id: string): Promise<UserRow | null> {
     [id],
   );
   return result.rows[0] ?? null;
+}
+
+export async function listUserMemberships(userId: string): Promise<UserMembership[]> {
+  const result = await db.query<UserMembership>(
+    `SELECT
+       r.id AS "recruiterId",
+       r.company_id AS "companyId",
+       c.name AS "companyName",
+       c.status AS "companyStatus",
+       r.company_role AS "companyRole",
+       r.created_at AS "joinedAt"
+     FROM recruiters r
+     JOIN companies c ON c.id = r.company_id
+     WHERE r.user_id = $1
+     ORDER BY r.created_at ASC`,
+    [userId],
+  );
+
+  return result.rows;
 }
 
 export async function createUser(

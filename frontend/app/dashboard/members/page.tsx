@@ -1,32 +1,16 @@
-import { apiFetch } from '@/lib/api';
+import { apiFetch } from '@/lib/server-api';
+import { getCurrentUser } from '@/lib/session';
+import type { CompanyMember } from '@/lib/types';
+import MemberActions from './MemberActions';
+import InviteMember from './InviteMember';
+import { ErrorState, EmptyState } from '@/components/ui-states';
 
 export default async function MembersPage() {
-  const res = await apiFetch('/api/companies/members');
-  const data: { members: any[] } = await res.json();
-
-  return (
-    <div className="p-6">
-      <h1 className="text-2xl font-semibold mb-4">Team members</h1>
-      <table className="w-full text-sm border-collapse">
-        <thead>
-          <tr className="text-left border-b">
-            <th className="py-2 pr-4">Email</th>
-            <th className="py-2 pr-4">Role</th>
-            <th className="py-2">Joined</th>
-          </tr>
-        </thead>
-        <tbody>
-          {data.members.map((m) => (
-            <tr key={m.recruiterId} className="border-b">
-              <td className="py-2 pr-4">{m.email}</td>
-              <td className="py-2 pr-4 capitalize">{m.companyRole.replace('_', ' ')}</td>
-              <td className="py-2 text-gray-500">
-                {new Date(m.joinedAt).toLocaleDateString()}
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  );
+  const [response, user] = await Promise.all([apiFetch('/api/companies/members'), getCurrentUser()]);
+  if (!response.ok) return <main className="p-6"><ErrorState message={response.status === 403 ? 'You do not have permission to manage members.' : 'Unable to load members.'} /></main>;
+  const { members }: { members: CompanyMember[] } = await response.json();
+  const role = user?.memberships[0]?.companyRole;
+  const canManage = role === 'owner' || role === 'hr_manager';
+  const owner = role === 'owner';
+  return <main className="space-y-5 p-6"><div><p className="text-sm text-gray-500">Company workspace</p><h1 className="text-3xl font-semibold">Team members</h1></div>{canManage && <InviteMember />}{members.length === 0 ? <EmptyState message="No members found." /> : <div className="overflow-x-auto rounded-xl border"><table className="w-full text-left text-sm"><thead className="bg-gray-50"><tr><th className="p-3">Email</th><th className="p-3">Role</th><th className="p-3">Joined</th><th className="p-3">Actions</th></tr></thead><tbody>{members.map((member) => <tr key={member.recruiterId} className="border-t"><td className="p-3">{member.email}</td><td className="p-3 capitalize">{member.companyRole.replace('_', ' ')}</td><td className="p-3">{new Date(member.joinedAt).toLocaleDateString()}</td><td className="p-3"><MemberActions recruiterId={member.recruiterId} role={member.companyRole} owner={owner} /></td></tr>)}</tbody></table></div>}</main>;
 }

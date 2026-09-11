@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { clientApiFetch, readApiError } from '@/lib/api';
 
 export default function JobActions({
   jobId,
@@ -19,13 +20,12 @@ export default function JobActions({
     setError(null);
 
     try {
-      const res = await fetch(`/api/jobs/${jobId}/${action}`, { 
+      const res = await clientApiFetch(`/api/jobs/${jobId}/${action}`, {
         method: 'POST' 
       });
 
       if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.error?.message || `${action} failed`);
+        throw new Error(await readApiError(res));
       }
 
       router.refresh();

@@ -1,5 +1,8 @@
 import { cookies } from 'next/headers';
 import { closeJob } from './actions';
+import Link from 'next/link';
+import { PageHeader, PageShell, StatusPill } from '@/components/ui';
+import { EmptyState } from '@/components/ui-states';
 
 async function fetchJobs(status?: string) {
   const cookieStore = await cookies();
@@ -25,14 +28,7 @@ export default async function CompaniesPage({
     const jobs = await fetchJobs(params.status);
 
   return (
-    <section>
-      <h1>Jobs</h1>
-      <div>
-        <a href="/admin/jobs">All</a>
-        <a href="/admin/jobs?status=open">Open</a>
-        <a href="/admin/jobs?status=closed">Closed</a>
-      </div>
-      <table>
+    <PageShell><PageHeader eyebrow="Administration" title="Jobs" description="Monitor published opportunities across the platform." /><div className="mb-5 flex gap-2">{[['', 'All'], ['open', 'Open'], ['closed', 'Closed']].map(([value, label]) => <Link key={label} href={value ? `/admin/jobs?status=${value}` : '/admin/jobs'} className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-sm text-slate-600 hover:border-indigo-300 hover:text-indigo-700">{label}</Link>)}</div><div className="overflow-x-auto rounded-2xl border border-slate-200 bg-white shadow-sm"><table className="w-full min-w-[700px] text-left text-sm">
         <thead>
           <tr><th>Title</th><th>Company</th><th>Status</th><th>Created</th><th>Actions</th></tr>
         </thead>
@@ -41,7 +37,7 @@ export default async function CompaniesPage({
             <tr key={j.id}>
               <td>{j.title}</td>
               <td>{j.company_name}</td>
-              <td>{j.status}</td>
+              <td><StatusPill status={j.status} /></td>
               <td>{new Date(j.created_at).toLocaleDateString()}</td>
               <td>
                 <form action={closeJob}>
@@ -50,9 +46,8 @@ export default async function CompaniesPage({
                 </form>
               </td>
             </tr>
-          ))}
+          ))}{jobs.length === 0 && <tr><td colSpan={5}><EmptyState message="No jobs match this filter." /></td></tr>}
         </tbody>
-      </table>
-    </section>
+      </table></div></PageShell>
   );
 }
