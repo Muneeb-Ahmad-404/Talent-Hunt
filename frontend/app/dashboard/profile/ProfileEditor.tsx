@@ -14,10 +14,16 @@ export default function ProfileEditor({ profile }: { profile: { headline?: strin
     event.preventDefault();
     setBusy(true);
     setMessage(null);
-    const response = await clientApiFetch('/api/backend/applicants/profile', {
+    let response = await clientApiFetch('/api/backend/applicants/profile', {
       method: 'PATCH',
       body: JSON.stringify({ headline, bio, skills: skills.split(',').map((value) => value.trim()).filter(Boolean) }),
     });
+    if (response.status == 404) {
+      response = await clientApiFetch('/api/backend/applicants/profile', {
+        method: 'POST',
+        body: JSON.stringify({ headline, bio, skills: skills.split(',').map((value) => value.trim()).filter(Boolean) }),
+      });
+    }
     setMessage(response.ok ? 'Profile saved.' : await readApiError(response));
     setBusy(false);
   }
