@@ -2,7 +2,6 @@ import { Router } from 'express';
 import { authMiddleware } from '../../shared/auth-middleware';
 import { requireRole } from '../../shared/require-role';
 import { getMyCompany, openWorkspace, inviteMember, getMembers, changeMemberRole, deleteMember } from './companies.service';
-import { requireCompanyMember } from '../../shared/company-member';
 import { validateBody } from '../../shared/validate';
 import { createCompanySchema, inviteMemberSchema, updateMemberSchema } from './companies.schema';
 
@@ -28,8 +27,6 @@ router.post('/', requireRole('recruiter'), async (req, res, next) => {
     next(err);
   }
 });
-
-router.use(requireCompanyMember);
 
 router.get('/me', async (req, res, next) => {
   try {

@@ -7,9 +7,30 @@ export default async function DashboardLayout({ children }: { children: React.Re
   if (!user) redirect('/login');
   const isApplicant = user.role === 'applicant';
   const membership = user.memberships[0];
-  const links = isApplicant
-    ? [['/dashboard', 'Overview'], ['/jobs', 'Browse jobs'], ['/dashboard/applications', 'My applications'], ['/dashboard/shortlist', 'Shortlist'], ['/dashboard/profile', 'Profile']]
-    : [['/dashboard/company', 'Workspace'], ['/dashboard/jobs', 'Jobs'], ['/dashboard/applications', 'Applications'], ...(['owner', 'hr_manager'].includes(membership?.companyRole ?? '') ? [['/dashboard/members', 'Members']] : [])];
+  const hasCompanyMembership = user.memberships.length > 0;
+
+  const applicantLinks = [
+    ['/dashboard', 'Overview'],
+    ['/jobs', 'Browse jobs'],
+    ['/dashboard/my-applications', 'My applications'],
+    ['/dashboard/shortlist', 'Shortlist'],
+    ['/dashboard/profile', 'Profile'],
+  ];
+
+  const companyLinks = [
+    ['/dashboard/company', 'Workspace'],
+    ['/dashboard/jobs', 'Jobs'],
+    ['/dashboard/applications', 'Applications'],
+    ...(['owner', 'hr_manager'].includes(membership?.companyRole ?? '')
+      ? [['/dashboard/members', 'Members']]
+      : []),
+  ];
+
+  const links = [
+    ...(isApplicant ? applicantLinks : []),
+    ...(hasCompanyMembership ? companyLinks : []),
+  ];
+  
   return <div className="min-h-screen bg-slate-50 lg:flex">
     <aside className="border-b border-slate-200 bg-white lg:min-h-screen lg:w-64 lg:border-b-0 lg:border-r">
       <div className="flex items-center justify-between px-5 py-5 lg:block lg:px-6"><Link href="/" className="text-lg font-bold tracking-tight text-slate-950">Talent Hunt<span className="text-indigo-600">.</span></Link><span className="ml-3 rounded-full bg-indigo-50 px-2.5 py-1 text-xs font-semibold capitalize text-indigo-700 lg:ml-0 lg:mt-5 lg:block lg:w-fit">{isApplicant ? 'Applicant' : membership?.companyRole?.replace('_', ' ') ?? 'Recruiter'}</span></div>

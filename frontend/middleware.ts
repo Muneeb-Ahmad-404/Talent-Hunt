@@ -15,6 +15,10 @@ export function middleware(req: NextRequest) {
   const token = req.cookies.get('access_token')?.value;
   const isProtected = req.nextUrl.pathname.startsWith('/dashboard');
 
+  if (isProtected && !token && req.cookies.get('refresh_token')?.value) {
+    return refreshAndContinue(req);
+  }
+
   if (isProtected && !token) {
     return NextResponse.redirect(new URL('/login', req.url));
   }

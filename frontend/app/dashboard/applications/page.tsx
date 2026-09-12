@@ -6,12 +6,10 @@ import { PageHeader, PageShell } from '@/components/ui';
 
 export default async function ApplicationsPage() {
   const user = await getCurrentUser();
+  if (!user) redirect('/login');
+  const hasCompanyMembership = user.memberships.length > 0;
 
-  if (!user) {
-    redirect('/login');
-  }
-
-  if (user.role === 'recruiter') {
+  if (hasCompanyMembership) {
     return (
       <PageShell>
         <PageHeader
@@ -24,6 +22,7 @@ export default async function ApplicationsPage() {
       </PageShell>
     );
   }
-
-  return <ApplicantApplications />;
+  else{
+    redirect('/login');
+  }
 }
