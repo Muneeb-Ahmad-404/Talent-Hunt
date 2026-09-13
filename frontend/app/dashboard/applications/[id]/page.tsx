@@ -13,16 +13,6 @@ export default async function ApplicationReviewPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const user = await getCurrentUser();
-  if (!user) redirect('/login');
-  const hasCompanyMembership = user.memberships.length > 0;
-  if (! hasCompanyMembership){
-    return (
-      <PageShell>
-        <ErrorState message="Unable to load this application." />
-      </PageShell>
-    )
-  }
   const response = await apiFetch('/api/applications');
 
   if (!response.ok) {
