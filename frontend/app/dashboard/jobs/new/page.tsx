@@ -10,6 +10,25 @@ export default function NewJobPage() {
 
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [screeningQuestions, setScreeningQuestions] = useState<string[]>([]);
+  const [questionInput, setQuestionInput] = useState('');
+
+  function addQuestion() {
+    const question = questionInput.trim();
+
+    if (!question) {
+      return;
+    }
+
+    setScreeningQuestions((current) => [...current, question]);
+    setQuestionInput('');
+  }
+
+  function removeQuestion(index: number) {
+    setScreeningQuestions((current) =>
+      current.filter((_, questionIndex) => questionIndex !== index),
+    );
+  }
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -25,11 +44,14 @@ export default function NewJobPage() {
       'employment_type',
     ];
 
-    const body = Object.fromEntries(
-      fields
-        .map((key) => [key, (form.get(key) as string)?.trim()])
-        .filter(([_, value]) => value),
-    );
+    const body = {
+      ...Object.fromEntries(
+        fields
+          .map((key) => [key, (form.get(key) as string)?.trim()])
+          .filter(([_, value]) => value),
+      ),
+      screeningQuestions,
+    };
 
     const res = await clientApiFetch('/api/jobs', {
       method: 'POST',
@@ -139,7 +161,7 @@ export default function NewJobPage() {
             </section>
 
             {/* Employment information */}
-            <section className="px-6 py-7 sm:px-8">
+            <section className="border-b border-slate-200 px-6 py-7 sm:px-8">
               <div className="mb-6">
                 <h2 className="text-sm font-semibold text-slate-900">
                   Employment
@@ -199,6 +221,96 @@ export default function NewJobPage() {
                     <option value="internship">Internship</option>
                   </select>
                 </div>
+              </div>
+            </section>
+
+            <section className="border-b border-slate-200 px-6 py-7 sm:px-8">
+              <div className="mb-6">
+                <h2 className="text-sm font-semibold text-slate-900">
+                  Screening questions
+                </h2>
+
+                <p className="mt-1 text-sm text-slate-500">
+                  Add questions applicants must answer before submitting their
+                  application.
+                </p>
+              </div>
+
+              <div className="space-y-5">
+                {/* Add question */}
+                <div>
+                  <label
+                    htmlFor="screening-question"
+                    className="block text-sm font-medium text-slate-900"
+                  >
+                    Question
+                  </label>
+
+                  <div className="mt-3 flex flex-col gap-3 sm:flex-row">
+                    <input
+                      id="screening-question"
+                      value={questionInput}
+                      onChange={(e) => setQuestionInput(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault();
+                          addQuestion();
+                        }
+                      }}
+                      placeholder="e.g. Why are you interested in this position?"
+                      className="block min-w-0 flex-1 rounded-lg border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-slate-400 focus:ring-2 focus:ring-slate-100"
+                    />
+
+                    <button
+                      type="button"
+                      onClick={addQuestion}
+                      disabled={!questionInput.trim()}
+                      className="rounded-lg bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      Add question
+                    </button>
+                  </div>
+                </div>
+
+                {/* Questions list */}
+                {screeningQuestions.length > 0 ? (
+                  <div>
+                    <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                      Questions
+                    </h3>
+
+                    <div className="mt-3 space-y-2">
+                      {screeningQuestions.map((question, index) => (
+                        <div
+                          key={`${question}-${index}`}
+                          className="flex items-start gap-3 rounded-lg border border-slate-200 bg-slate-50 px-4 py-3"
+                        >
+                          <span className="mt-0.5 shrink-0 text-sm font-semibold text-slate-500">
+                            {index + 1}.
+                          </span>
+
+                          <p className="min-w-0 flex-1 text-sm leading-6 text-slate-800">
+                            {question}
+                          </p>
+
+                          <button
+                            type="button"
+                            onClick={() => removeQuestion(index)}
+                            className="shrink-0 text-sm font-medium text-slate-400 transition hover:text-red-600"
+                          >
+                            Remove
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="rounded-lg border border-dashed border-slate-200 px-4 py-5 text-center">
+                    <p className="text-sm text-slate-500">
+                      No screening questions added.
+                    </p>
+                  </div>
+                )}
               </div>
             </section>
 
