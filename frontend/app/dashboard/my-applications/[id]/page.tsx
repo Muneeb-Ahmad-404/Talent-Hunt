@@ -1,8 +1,6 @@
 import { notFound } from 'next/navigation';
 import { apiFetch } from '@/lib/server-api';
 import { getCurrentUser } from '@/lib/session';
-import type { Pipeline } from '@/lib/types';
-import ApplicationActions from '../ApplicationActions';
 import { ErrorState } from '@/components/ui-states';
 import { PageHeader, PageShell, Card, StatusPill } from '@/components/ui';
 

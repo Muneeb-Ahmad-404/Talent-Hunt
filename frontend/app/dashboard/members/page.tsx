@@ -43,7 +43,7 @@ export default async function MembersPage() {
         eyebrow="Company workspace"
         title="Team members"
         description="Manage workspace access and hiring responsibilities."
-        actions={canManage ? <InviteMember /> : undefined}
+        action={canManage ? <InviteMember /> : undefined}
       />
 
       <div className="mb-5 flex items-center justify-between">
