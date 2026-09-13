@@ -35,6 +35,18 @@ export default async function JobDetailPage({
     role === 'hr_manager' ||
     role === 'recruiter';
 
+  const attributes =
+    job.attributes && typeof job.attributes === 'object'
+      ? Object.entries(job.attributes)
+      : [];
+
+  const salary =
+    job.salary_min != null || job.salary_max != null
+      ? [job.salary_min, job.salary_max]
+          .filter((value) => value != null)
+          .join(' – ')
+      : null;
+
   return (
     <PageShell>
       <div className="space-y-8">
@@ -42,7 +54,12 @@ export default async function JobDetailPage({
         <PageHeader
           eyebrow="Company job"
           title={job.title}
-          description="Review the position details and manage its publishing status."
+          description={[
+            job.location,
+            job.employment_type?.replace(/_/g, ' '),
+          ]
+            .filter(Boolean)
+            .join(' · ')}
           action={
             <div className="flex items-center gap-3">
               <StatusPill status={job.status} />
@@ -57,12 +74,12 @@ export default async function JobDetailPage({
           }
         />
 
-        {/* Job details */}
+        {/* Job overview */}
         <Card className="overflow-hidden">
           <div className="border-b border-slate-200 px-6 py-5">
             <div>
               <h2 className="text-sm font-semibold text-slate-900">
-                Job description
+                Job details
               </h2>
 
               <p className="mt-1 text-sm text-slate-500">
@@ -71,10 +88,147 @@ export default async function JobDetailPage({
             </div>
           </div>
 
-          <div className="px-6 py-7">
-            <div className="max-w-3xl">
-              <p className="whitespace-pre-wrap text-sm leading-7 text-slate-700">
-                {job.description}
+          <div className="space-y-8 px-6 py-7">
+            {/* Basic information */}
+            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+              {job.location && (
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+                    Location
+                  </p>
+
+                  <p className="mt-2 text-sm font-medium text-slate-800">
+                    {job.location}
+                  </p>
+                </div>
+              )}
+
+              {job.employment_type && (
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+                    Employment
+                  </p>
+
+                  <p className="mt-2 text-sm font-medium capitalize text-slate-800">
+                    {job.employment_type.replace(/_/g, ' ')}
+                  </p>
+                </div>
+              )}
+
+              {salary && (
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+                    Salary
+                  </p>
+
+                  <p className="mt-2 text-sm font-medium text-slate-800">
+                    {salary}
+                  </p>
+                </div>
+              )}
+
+              {job.deadline && (
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+                    Deadline
+                  </p>
+
+                  <p className="mt-2 text-sm font-medium text-slate-800">
+                    {new Date(job.deadline).toLocaleDateString(undefined, {
+                      year: 'numeric',
+                      month: 'short',
+                      day: 'numeric',
+                    })}
+                  </p>
+                </div>
+              )}
+            </div>
+
+            {/* Description */}
+            {job.description && (
+              <div>
+                <h3 className="text-sm font-semibold text-slate-900">
+                  Description
+                </h3>
+
+                <p className="mt-3 max-w-3xl whitespace-pre-wrap text-sm leading-7 text-slate-700">
+                  {job.description}
+                </p>
+              </div>
+            )}
+
+            {/* Requirements */}
+            {attributes.length > 0 && (
+              <div>
+                <h3 className="text-sm font-semibold text-slate-900">
+                  Requirements
+                </h3>
+
+                <div className="mt-4 grid gap-5 sm:grid-cols-2">
+                  {attributes.map(([key, value]) => (
+                    <div key={key}>
+                      <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+                        {key.replace(/[_-]/g, ' ')}
+                      </p>
+
+                      <p className="mt-2 text-sm leading-6 text-slate-700">
+                        {Array.isArray(value)
+                          ? value.join(', ')
+                          : typeof value === 'object' && value !== null
+                            ? JSON.stringify(value)
+                            : String(value)}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Screening questions */}
+            {job.screening_questions && job.screening_questions?.length > 0 && (
+              <div>
+                <h3 className="text-sm font-semibold text-slate-900">
+                  Screening questions
+                </h3>
+
+                <div className="mt-3 space-y-3">
+                  {job.screening_questions.map(
+                    (
+                      question: {
+                        text: string;
+                        type: 'text' | 'boolean' | 'url';
+                        required: boolean;
+                      },
+                      index: number,
+                    ) => (
+                      <div
+                        key={`${index}-${question.text}`}
+                        className="rounded-lg border border-slate-200 p-3"
+                      >
+                        <p className="text-sm text-slate-900">
+                          {index + 1}. {question.text}
+                        </p>
+
+                        <p className="mt-1 text-xs text-slate-500">
+                          {question.type} ·{' '}
+                          {question.required ? 'Required' : 'Optional'}
+                        </p>
+                      </div>
+                    ),
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Metadata */}
+            <div className="border-t border-slate-100 pt-5">
+              <p className="text-xs text-slate-400">
+                Posted{' '}
+                {new Date(job.createdAt).toLocaleDateString(undefined, {
+                  year: 'numeric',
+                  month: 'short',
+                  day: 'numeric',
+                })}
               </p>
             </div>
           </div>

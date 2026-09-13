@@ -47,7 +47,10 @@ export type Application = {
     skills: string[];
     resumeKey: string | null;
   };
-  screening_answers?: unknown[];
+  screening_answers?: Array<{
+    question: string;
+    answer: string;
+  }>;
   upcoming_interview?: {
     id: string;
     scheduled_at: string;

@@ -45,8 +45,8 @@ export default async function PublicJobDetailPage({
 
   return (
     <PageShell className="max-w-5xl">
-      <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_340px]">
-        <div className="min-w-0">
+      <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_300px]">
+        <main className="min-w-0">
           <PageHeader
             eyebrow={job.companyName}
             title={job.title}
@@ -58,7 +58,7 @@ export default async function PublicJobDetailPage({
               .join(' · ')}
           />
 
-          <div className="space-y-5">
+          <div className="mt-6 space-y-5">
             {job.description && (
               <Card className="p-6">
                 <h2 className="text-base font-semibold text-slate-950">
@@ -97,43 +97,10 @@ export default async function PublicJobDetailPage({
               </Card>
             )}
 
-            {job.screeningQuestions &&
-              job.screeningQuestions.length > 0 && (
-                <Card className="p-6">
-                  <h2 className="text-base font-semibold text-slate-950">
-                    Application questions
-                  </h2>
-
-                  <p className="mt-1 text-sm text-slate-500">
-                    You’ll answer these questions when submitting your
-                    application.
-                  </p>
-
-                  <div className="mt-5 space-y-4">
-                    {job.screeningQuestions.map((question, index) => (
-                      <div
-                        key={`${question.text}-${index}`}
-                        className="rounded-lg border border-slate-200 bg-slate-50/60 p-4"
-                      >
-                        <div className="flex gap-3">
-                          <span className="shrink-0 text-sm font-semibold text-slate-400">
-                            {String(index + 1).padStart(2, '0')}
-                          </span>
-
-                          <p className="text-sm leading-6 text-slate-800">
-                            {question.text}
-                            {question.required && (
-                              <span className="ml-1 text-slate-400">
-                                Required
-                              </span>
-                            )}
-                          </p>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </Card>
-              )}
+            <JobApplicationActions
+              jobId={id}
+              questions={job.screeningQuestions ?? []}
+            />
 
             <p className="px-1 text-xs text-slate-400">
               Posted{' '}
@@ -144,36 +111,63 @@ export default async function PublicJobDetailPage({
               })}
             </p>
           </div>
-        </div>
+        </main>
 
         <aside className="lg:sticky lg:top-24 lg:self-start">
           <Card className="p-6">
-            <div className="border-b border-slate-100 pb-5">
-              <p className="text-sm font-medium text-slate-500">
-                {job.companyName}
-              </p>
+            <h2 className="text-base font-semibold text-slate-950">
+              Job details
+            </h2>
 
-              <h2 className="mt-1 text-lg font-semibold text-slate-950">
-                {job.title}
-              </h2>
+            <dl className="mt-5 space-y-4">
+              {job.location && (
+                <div>
+                  <dt className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+                    Location
+                  </dt>
+                  <dd className="mt-1 text-sm text-slate-700">
+                    {job.location}
+                  </dd>
+                </div>
+              )}
 
-              <div className="mt-3 space-y-1 text-sm text-slate-500">
-                {job.location && <p>{job.location}</p>}
+              {job.employmentType && (
+                <div>
+                  <dt className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+                    Employment
+                  </dt>
+                  <dd className="mt-1 text-sm capitalize text-slate-700">
+                    {job.employmentType.replace(/_/g, ' ')}
+                  </dd>
+                </div>
+              )}
 
-                {job.employmentType && (
-                  <p>{job.employmentType.replace(/_/g, ' ')}</p>
-                )}
+              {salary && (
+                <div>
+                  <dt className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+                    Salary
+                  </dt>
+                  <dd className="mt-1 text-sm text-slate-700">
+                    {salary}
+                  </dd>
+                </div>
+              )}
 
-                {salary && <p>{salary}</p>}
-              </div>
-            </div>
-
-            <div className="pt-5">
-              <JobApplicationActions
-                jobId={id}
-                questions={job.screeningQuestions ?? []}
-              />
-            </div>
+              {job.deadline && (
+                <div>
+                  <dt className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+                    Application deadline
+                  </dt>
+                  <dd className="mt-1 text-sm text-slate-700">
+                    {new Date(job.deadline).toLocaleDateString(undefined, {
+                      year: 'numeric',
+                      month: 'short',
+                      day: 'numeric',
+                    })}
+                  </dd>
+                </div>
+              )}
+            </dl>
           </Card>
         </aside>
       </div>

@@ -5,23 +5,46 @@ import { useRouter } from 'next/navigation';
 import { clientApiFetch, readApiError } from '@/lib/api';
 import Link from 'next/link';
 
+type ScreeningQuestion = {
+  text: string;
+  type: 'text' | 'boolean' | 'url';
+  required: boolean;
+};
+
 export default function NewJobPage() {
   const router = useRouter();
 
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const [screeningQuestions, setScreeningQuestions] = useState<string[]>([]);
+
+  const [screeningQuestions, setScreeningQuestions] = useState<
+    ScreeningQuestion[]
+  >([]);
+
   const [questionInput, setQuestionInput] = useState('');
+  const [questionType, setQuestionType] =
+    useState<ScreeningQuestion['type']>('text');
+  const [questionRequired, setQuestionRequired] = useState(true);
 
   function addQuestion() {
-    const question = questionInput.trim();
+    const text = questionInput.trim();
 
-    if (!question) {
+    if (!text) {
       return;
     }
 
-    setScreeningQuestions((current) => [...current, question]);
+    setScreeningQuestions((current) => [
+      ...current,
+      {
+        text,
+        type: questionType,
+        required: questionRequired,
+      },
+    ]);
+
     setQuestionInput('');
+    setQuestionType('text');
+    setQuestionRequired(true);
   }
 
   function removeQuestion(index: number) {
@@ -32,30 +55,46 @@ export default function NewJobPage() {
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
+
     setLoading(true);
     setError(null);
 
     const form = new FormData(e.currentTarget);
 
-    const fields = [
-      'title',
-      'description',
-      'location',
-      'employment_type',
-    ];
+    const title = (form.get('title') as string)?.trim();
+    const description = (form.get('description') as string)?.trim();
+
+    if (!description) {
+      setError('Description is required.');
+      setLoading(false);
+      return;
+    }
+
+    const attributes = {
+      skills: (form.get('skills') as string)?.trim() || '',
+      experience: (form.get('experience') as string)?.trim() || '',
+      education: (form.get('education') as string)?.trim() || '',
+    };
 
     const body = {
-      ...Object.fromEntries(
-        fields
-          .map((key) => [key, (form.get(key) as string)?.trim()])
-          .filter(([_, value]) => value),
-      ),
-      screeningQuestions,
+      title,
+      description,
+      location: (form.get('location') as string)?.trim() || undefined,
+      employment_type:
+        (form.get('employment_type') as string)?.trim() || undefined,
+      deadline: (form.get('deadline') as string)?.trim() || undefined,
+      salary_min: form.get('salary_min')
+        ? Number(form.get('salary_min'))
+        : undefined,
+      salary_max: form.get('salary_max')
+        ? Number(form.get('salary_max'))
+        : undefined,
+      attributes,
+      screening_questions: screeningQuestions,
     };
 
     const res = await clientApiFetch('/api/jobs', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body),
     });
 
@@ -71,7 +110,6 @@ export default function NewJobPage() {
   return (
     <main className="min-h-full">
       <div className="mx-auto max-w-4xl">
-        {/* Header */}
         <div className="mb-8">
           <Link
             href="/dashboard/jobs"
@@ -90,15 +128,13 @@ export default function NewJobPage() {
           </h1>
 
           <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-500">
-            Add the basic details for your new position. You can review and
-            manage the job after it has been created.
+            Add the details candidates need to understand the position and
+            submit an application.
           </p>
         </div>
 
-        {/* Form */}
         <form onSubmit={handleSubmit}>
           <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
-            {/* Basic information */}
             <section className="border-b border-slate-200 px-6 py-7 sm:px-8">
               <div className="mb-6">
                 <h2 className="text-sm font-semibold text-slate-900">
@@ -106,13 +142,11 @@ export default function NewJobPage() {
                 </h2>
 
                 <p className="mt-1 text-sm text-slate-500">
-                  Start with the information candidates need to understand the
-                  role.
+                  Basic information about the position.
                 </p>
               </div>
 
               <div className="space-y-6">
-                {/* Title */}
                 <div>
                   <label
                     htmlFor="title"
@@ -120,11 +154,6 @@ export default function NewJobPage() {
                   >
                     Job title <span className="text-red-500">*</span>
                   </label>
-
-                  <p className="mt-1 text-xs text-slate-500">
-                    Use a clear, recognizable title such as Senior Backend
-                    Engineer.
-                  </p>
 
                   <input
                     id="title"
@@ -135,13 +164,12 @@ export default function NewJobPage() {
                   />
                 </div>
 
-                {/* Description */}
                 <div>
                   <label
                     htmlFor="description"
                     className="block text-sm font-medium text-slate-900"
                   >
-                    Description
+                    Description <span className="text-red-500">*</span>
                   </label>
 
                   <p className="mt-1 text-xs text-slate-500">
@@ -152,6 +180,7 @@ export default function NewJobPage() {
                   <textarea
                     id="description"
                     name="description"
+                    required
                     rows={8}
                     placeholder="Describe the position..."
                     className="mt-3 block w-full resize-y rounded-lg border border-slate-200 bg-white px-3.5 py-3 text-sm leading-6 text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-slate-400 focus:ring-2 focus:ring-slate-100"
@@ -160,7 +189,6 @@ export default function NewJobPage() {
               </div>
             </section>
 
-            {/* Employment information */}
             <section className="border-b border-slate-200 px-6 py-7 sm:px-8">
               <div className="mb-6">
                 <h2 className="text-sm font-semibold text-slate-900">
@@ -168,13 +196,11 @@ export default function NewJobPage() {
                 </h2>
 
                 <p className="mt-1 text-sm text-slate-500">
-                  Give candidates the basic context about where and how the
-                  role is structured.
+                  Define where and how the role is structured.
                 </p>
               </div>
 
               <div className="grid gap-6 sm:grid-cols-2">
-                {/* Location */}
                 <div>
                   <label
                     htmlFor="location"
@@ -182,10 +208,6 @@ export default function NewJobPage() {
                   >
                     Location
                   </label>
-
-                  <p className="mt-1 text-xs text-slate-500">
-                    City, country, or a remote location.
-                  </p>
 
                   <input
                     id="location"
@@ -195,7 +217,6 @@ export default function NewJobPage() {
                   />
                 </div>
 
-                {/* Employment type */}
                 <div>
                   <label
                     htmlFor="employment_type"
@@ -203,10 +224,6 @@ export default function NewJobPage() {
                   >
                     Employment type
                   </label>
-
-                  <p className="mt-1 text-xs text-slate-500">
-                    Choose the arrangement for this position.
-                  </p>
 
                   <select
                     id="employment_type"
@@ -220,6 +237,134 @@ export default function NewJobPage() {
                     <option value="contract">Contract</option>
                     <option value="internship">Internship</option>
                   </select>
+                </div>
+
+                <div>
+                  <label
+                    htmlFor="deadline"
+                    className="block text-sm font-medium text-slate-900"
+                  >
+                    Application deadline
+                  </label>
+
+                  <input
+                    id="deadline"
+                    name="deadline"
+                    type="date"
+                    className="mt-3 block w-full rounded-lg border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-900 outline-none transition focus:border-slate-400 focus:ring-2 focus:ring-slate-100"
+                  />
+                </div>
+              </div>
+            </section>
+
+            <section className="border-b border-slate-200 px-6 py-7 sm:px-8">
+              <div className="mb-6">
+                <h2 className="text-sm font-semibold text-slate-900">
+                  Compensation
+                </h2>
+
+                <p className="mt-1 text-sm text-slate-500">
+                  Optionally provide the expected salary range.
+                </p>
+              </div>
+
+              <div className="grid gap-6 sm:grid-cols-2">
+                <div>
+                  <label
+                    htmlFor="salary_min"
+                    className="block text-sm font-medium text-slate-900"
+                  >
+                    Minimum salary
+                  </label>
+
+                  <input
+                    id="salary_min"
+                    name="salary_min"
+                    type="number"
+                    min="1"
+                    placeholder="e.g. 150000"
+                    className="mt-3 block w-full rounded-lg border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-slate-400 focus:ring-2 focus:ring-slate-100"
+                  />
+                </div>
+
+                <div>
+                  <label
+                    htmlFor="salary_max"
+                    className="block text-sm font-medium text-slate-900"
+                  >
+                    Maximum salary
+                  </label>
+
+                  <input
+                    id="salary_max"
+                    name="salary_max"
+                    type="number"
+                    min="1"
+                    placeholder="e.g. 250000"
+                    className="mt-3 block w-full rounded-lg border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-slate-400 focus:ring-2 focus:ring-slate-100"
+                  />
+                </div>
+              </div>
+            </section>
+
+            <section className="border-b border-slate-200 px-6 py-7 sm:px-8">
+              <div className="mb-6">
+                <h2 className="text-sm font-semibold text-slate-900">
+                  Requirements
+                </h2>
+
+                <p className="mt-1 text-sm text-slate-500">
+                  Add the main qualifications you are looking for.
+                </p>
+              </div>
+
+              <div className="space-y-6">
+                <div>
+                  <label
+                    htmlFor="skills"
+                    className="block text-sm font-medium text-slate-900"
+                  >
+                    Skills
+                  </label>
+
+                  <input
+                    id="skills"
+                    name="skills"
+                    placeholder="e.g. Node.js, PostgreSQL, TypeScript, Docker"
+                    className="mt-3 block w-full rounded-lg border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-slate-400 focus:ring-2 focus:ring-slate-100"
+                  />
+                </div>
+
+                <div>
+                  <label
+                    htmlFor="experience"
+                    className="block text-sm font-medium text-slate-900"
+                  >
+                    Experience
+                  </label>
+
+                  <input
+                    id="experience"
+                    name="experience"
+                    placeholder="e.g. 3+ years of backend development"
+                    className="mt-3 block w-full rounded-lg border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-slate-400 focus:ring-2 focus:ring-slate-100"
+                  />
+                </div>
+
+                <div>
+                  <label
+                    htmlFor="education"
+                    className="block text-sm font-medium text-slate-900"
+                  >
+                    Education
+                  </label>
+
+                  <input
+                    id="education"
+                    name="education"
+                    placeholder="e.g. Bachelor's degree in Computer Science"
+                    className="mt-3 block w-full rounded-lg border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-slate-400 focus:ring-2 focus:ring-slate-100"
+                  />
                 </div>
               </div>
             </section>
@@ -237,61 +382,85 @@ export default function NewJobPage() {
               </div>
 
               <div className="space-y-5">
-                {/* Add question */}
-                <div>
-                  <label
-                    htmlFor="screening-question"
-                    className="block text-sm font-medium text-slate-900"
-                  >
-                    Question
-                  </label>
+                <div className="space-y-3">
+                  <input
+                    value={questionInput}
+                    onChange={(e) => setQuestionInput(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        addQuestion();
+                      }
+                    }}
+                    maxLength={500}
+                    placeholder="e.g. Why are you interested in this position?"
+                    className="block w-full rounded-lg border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-slate-400 focus:ring-2 focus:ring-slate-100"
+                  />
 
-                  <div className="mt-3 flex flex-col gap-3 sm:flex-row">
-                    <input
-                      id="screening-question"
-                      value={questionInput}
-                      onChange={(e) => setQuestionInput(e.target.value)}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter') {
-                          e.preventDefault();
-                          addQuestion();
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+                    <select
+                      value={questionType}
+                      onChange={(e) =>
+                        setQuestionType(
+                          e.target.value as ScreeningQuestion['type'],
+                        )
+                      }
+                      className="rounded-lg border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-900"
+                    >
+                      <option value="text">Text</option>
+                      <option value="boolean">Yes / No</option>
+                      <option value="url">URL</option>
+                    </select>
+
+                    <label className="flex items-center gap-2 text-sm text-slate-700">
+                      <input
+                        type="checkbox"
+                        checked={questionRequired}
+                        onChange={(e) =>
+                          setQuestionRequired(e.target.checked)
                         }
-                      }}
-                      placeholder="e.g. Why are you interested in this position?"
-                      className="block min-w-0 flex-1 rounded-lg border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-slate-400 focus:ring-2 focus:ring-slate-100"
-                    />
+                      />
+                      Required
+                    </label>
 
                     <button
                       type="button"
                       onClick={addQuestion}
                       disabled={!questionInput.trim()}
-                      className="rounded-lg bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50"
+                      className="rounded-lg bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50 sm:ml-auto"
                     >
                       Add question
                     </button>
                   </div>
                 </div>
 
-                {/* Questions list */}
                 {screeningQuestions.length > 0 ? (
-                  <div>
-                    <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-                      Questions
-                    </h3>
-
-                    <div className="mt-3 space-y-2">
-                      {screeningQuestions.map((question, index) => (
-                        <div
-                          key={`${question}-${index}`}
-                          className="flex items-start gap-3 rounded-lg border border-slate-200 bg-slate-50 px-4 py-3"
-                        >
+                  <div className="space-y-2">
+                    {screeningQuestions.map((question, index) => (
+                      <div
+                        key={`${question.text}-${index}`}
+                        className="rounded-lg border border-slate-200 bg-slate-50 px-4 py-3"
+                      >
+                        <div className="flex items-start gap-3">
                           <span className="mt-0.5 shrink-0 text-sm font-semibold text-slate-500">
                             {index + 1}.
                           </span>
 
-                          <p className="min-w-0 flex-1 text-sm leading-6 text-slate-800">
-                            {question}
-                          </p>
+                          <div className="min-w-0 flex-1">
+                            <p className="text-sm leading-6 text-slate-800">
+                              {question.text}
+                            </p>
+
+                            <p className="mt-1 text-xs text-slate-500">
+                              {question.type === 'text'
+                                ? 'Text'
+                                : question.type === 'boolean'
+                                  ? 'Yes / No'
+                                  : 'URL'}
+                              {' · '}
+                              {question.required ? 'Required' : 'Optional'}
+                            </p>
+                          </div>
 
                           <button
                             type="button"
@@ -301,8 +470,8 @@ export default function NewJobPage() {
                             Remove
                           </button>
                         </div>
-                      ))}
-                    </div>
+                      </div>
+                    ))}
                   </div>
                 ) : (
                   <div className="rounded-lg border border-dashed border-slate-200 px-4 py-5 text-center">
@@ -314,15 +483,13 @@ export default function NewJobPage() {
               </div>
             </section>
 
-            {/* Error */}
             {error && (
               <div className="border-t border-red-100 bg-red-50 px-6 py-4 sm:px-8">
                 <p className="text-sm font-medium text-red-700">{error}</p>
               </div>
             )}
 
-            {/* Actions */}
-            <div className="flex flex-col-reverse gap-3 border-t border-slate-200 bg-slate-50/60 px-6 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-8">
+            <div className="flex flex-col-reverse gap-3 bg-slate-50/60 px-6 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-8">
               <p className="text-xs text-slate-500">
                 The job will be saved as a draft.
               </p>

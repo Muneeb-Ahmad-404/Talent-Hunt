@@ -8,7 +8,7 @@ const screeningQuestionInputSchema = z.object({
 const jobFieldsSchema = z.object({
   title:               z.string().min(1, 'Title is required').max(200),
   description:         z.string().min(1, 'Description is required').max(100_000),
-  deadline:            z.date('Deadline must be a date in YYYY-MM-DD format').optional(),
+  deadline:            z.coerce.date('Deadline must be a date in YYYY-MM-DD format').optional(),
   
   location:            z.string().optional(),
   employment_type:     z.enum(['full_time', 'part_time', 'contract', 'internship']).optional(),

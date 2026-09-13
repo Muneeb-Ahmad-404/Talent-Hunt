@@ -134,10 +134,28 @@ export default async function ApplicationReviewPage({
               Screening answers
             </h2>
             <p className="mt-1 text-sm leading-6 text-slate-500">
-              Screening answers are not included in the current company
-              pipeline response.
+              Answers submitted with this application.
             </p>
           </div>
+
+          {application.screening_answers?.length ? (
+            <div className="mt-5 space-y-5">
+              {application.screening_answers.map((item, index) => (
+                <div key={index}>
+                  <p className="text-sm font-medium text-slate-900">
+                    {item.question}
+                  </p>
+                  <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-slate-700">
+                    {item.answer || 'No answer provided'}
+                  </p>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="mt-5 text-sm text-slate-500">
+              No screening answers were submitted.
+            </p>
+          )}
         </Card>
 
         <Card className="p-6">
