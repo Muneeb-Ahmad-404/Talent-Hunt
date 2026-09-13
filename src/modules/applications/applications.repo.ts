@@ -110,8 +110,9 @@ export async function findApplicationsForCompany(companyId: string) {
        a.stage,
        a.status,
        a.created_at,
-       a.profile_snapshot->>'headline' AS headline,
+       a.profile_snapshot,
        a.applicant_id,
+       a.screening_answers,
        j.title AS job_title,
        -- Most recent interview for this application
        (

@@ -1,6 +1,5 @@
 import { getCurrentUser } from '@/lib/session';
 import RecruiterPipeline from './RecruiterPipeline';
-import ApplicantApplications from './ApplicantApplications';
 import { redirect } from 'next/navigation';
 import { PageHeader, PageShell } from '@/components/ui';
 

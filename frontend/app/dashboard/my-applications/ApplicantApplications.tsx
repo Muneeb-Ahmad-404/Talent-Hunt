@@ -40,7 +40,7 @@ export default async function ApplicantApplications() {
               className="p-0 transition-shadow hover:shadow-md"
             >
               <Link
-                href={`/dashboard/applications/${application.id}`}
+                href={`/dashboard/my-applications/${application.id}`}
                 className="group block p-5"
               >
                 <div className="flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">

@@ -278,6 +278,7 @@ export async function findApplicationsForApplicant(applicantId: string) {
        a.stage,
        a.status,
        a.created_at,
+       a.profile_snapshot,
        j.title       AS job_title,
        c.name        AS company_name,
        -- Most recent upcoming interview with pending outcome
