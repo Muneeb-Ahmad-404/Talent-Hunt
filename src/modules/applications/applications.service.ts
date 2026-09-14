@@ -44,6 +44,9 @@ export async function moveApplicationStage(
   if (application.status === 'withdrawn') {
     throw new ValidationError('Cannot change stage of a withdrawn application');
   }
+  if (application.user_id === userId) {
+    throw new ForbiddenError('Cannot update your own application');
+  }
 
   assertValidTransition(application.stage as Stage, targetStage);
 
@@ -67,8 +70,9 @@ export async function scheduleInterview(
   if (application.status === 'withdrawn') {
     throw new ValidationError('Cannot schedule interview for a withdrawn application');
   }
-
-  // TODO: wrap stage update and interview insert in a transaction (ch52 pattern)
+  if (application.user_id === userId) {
+    throw new ForbiddenError('Cannot schedule interview for your own application');
+  }
   
   // Advance stage to 'interview' if not already at or past it
   const currentStageIdx = STAGE_ORDER.indexOf(application.stage);
@@ -116,6 +120,10 @@ export async function recordInterviewFeedback(
 
   if (interview.application_status === 'withdrawn') {
     throw new ValidationError('Cannot record feedback for a withdrawn application');
+  }
+
+  if (interview.user_id === userId) {
+    throw new ForbiddenError('Cannot record feeback for your own application');
   }
 
   // Update the interview record

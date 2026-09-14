@@ -5,9 +5,10 @@ export async function findApplicationForCompany(
   companyId: string
 ) {
   const result = await db.query(
-    `SELECT a.id, a.job_id, a.applicant_id, a.stage, a.status
+    `SELECT a.id, a.job_id, a.applicant_id, a.stage, a.status, app.user_id
      FROM applications a
      JOIN jobs j ON j.id = a.job_id
+     JOIN applicants app ON app.id = a.applicant_id
      WHERE a.id = $1 AND j.company_id = $2`,
     [applicationId, companyId]
   );
@@ -41,6 +42,7 @@ export async function findApplicationWithApplicant(
   const result = await db.query(
     `SELECT
        a.id, a.job_id, a.applicant_id, a.stage, a.status,
+       ap.user_id AS user_id,
        u.email        AS applicant_email,
        j.title        AS job_title
      FROM applications a
@@ -78,9 +80,11 @@ export async function findInterviewForCompany(
        i.notes, i.feedback, i.outcome,
        a.stage AS application_stage,
        a.status AS application_status,
+       ap.user_id AS user_id,
        j.company_id
      FROM interviews i
      JOIN applications a ON a.id = i.application_id
+     JOIN applicants ap ON ap.id = a.applicant_id
      JOIN jobs        j ON j.id = a.job_id
      WHERE i.id = $1 AND j.company_id = $2`,
     [interviewId, companyId]
@@ -114,6 +118,7 @@ export async function findApplicationsForCompany(companyId: string) {
        a.applicant_id,
        a.screening_answers,
        j.title AS job_title,
+       app.user_id AS userId,
        -- Most recent interview for this application
        (
          SELECT row_to_json(i_sub)
@@ -127,6 +132,7 @@ export async function findApplicationsForCompany(companyId: string) {
        ) AS latest_interview
      FROM applications a
      JOIN jobs j ON j.id = a.job_id
+     JOIN applicants app on app.id = a.applicant_id
      WHERE j.company_id = $1
      ORDER BY a.stage, a.created_at DESC`,
     [companyId]
