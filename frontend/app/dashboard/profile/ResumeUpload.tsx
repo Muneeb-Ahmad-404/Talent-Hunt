@@ -14,7 +14,11 @@ export default function ResumeUpload() {
     setMessage(null);
     try {
       const start = await clientApiFetch('/api/applicants/profile/resume-upload', { method: 'POST' });
-      if (!start.ok) throw new Error(await readApiError(start));
+      if (!start.ok) {
+        throw new Error(
+          await readApiError(start, 'Unable to start the resume upload.'),
+        );
+      }
       const { uploadUrl, key } = await start.json();
       const storage = await fetch(uploadUrl, { method: 'PUT', body: file, headers: { 'Content-Type': 'application/pdf' } });
       if (!storage.ok) throw new Error('Resume upload failed.');
@@ -22,10 +26,16 @@ export default function ResumeUpload() {
         method: 'POST',
         body: JSON.stringify({ key, filename: file.name }),
       });
-      if (!confirm.ok) throw new Error(await readApiError(confirm));
+      if (!confirm.ok) {
+        throw new Error(
+          await readApiError(confirm, 'Unable to save your resume.'),
+        );
+      }
       setMessage('Resume uploaded successfully.');
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : 'Resume upload failed.');
+      setMessage(
+        error instanceof Error ? error.message : 'Resume upload failed.',
+      );
     } finally {
       setBusy(false);
     }

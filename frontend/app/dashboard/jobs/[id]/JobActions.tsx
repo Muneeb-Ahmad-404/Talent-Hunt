@@ -25,7 +25,9 @@ export default function JobActions({
       });
 
       if (!res.ok) {
-        throw new Error(await readApiError(res));
+        throw new Error(
+          await readApiError(res, 'Unable to update this job right now.'),
+        );
       }
 
       router.refresh();

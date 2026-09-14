@@ -102,7 +102,9 @@ export default function NewJobPage() {
       const { jobId } = await res.json();
       router.push(`/dashboard/jobs/${jobId}`);
     } else {
-      setError(await readApiError(res));
+      setError(
+        await readApiError(res, 'Unable to create the job. Please try again.'),
+      );
       setLoading(false);
     }
   }

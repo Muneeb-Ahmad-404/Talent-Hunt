@@ -106,7 +106,9 @@ export default function EditJobForm({
     });
 
     setMessage(
-      response.ok ? 'Job updated.' : await readApiError(response),
+      response.ok
+        ? 'Job updated.'
+        : await readApiError(response, 'Unable to update the job.'),
     );
 
     setBusy(false);

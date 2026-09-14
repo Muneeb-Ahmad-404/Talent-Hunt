@@ -53,7 +53,7 @@ export default function ApplicationActions({
     setMessage(
       response.ok
         ? 'Application stage updated.'
-        : await readApiError(response),
+        : await readApiError(response, 'Unable to update the application.'),
     );
 
     setBusy(false);
@@ -84,7 +84,7 @@ export default function ApplicationActions({
     setMessage(
       response.ok
         ? 'Interview scheduled successfully.'
-        : await readApiError(response),
+        : await readApiError(response, 'Unable to schedule the interview.'),
     );
 
     setBusy(false);
@@ -116,7 +116,7 @@ export default function ApplicationActions({
     setMessage(
       response.ok
         ? 'Interview feedback saved.'
-        : await readApiError(response),
+        : await readApiError(response, 'Unable to save the interview feedback.'),
     );
 
     setBusy(false);
