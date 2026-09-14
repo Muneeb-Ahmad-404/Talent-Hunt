@@ -33,7 +33,7 @@ export async function sendVerificationEmail(to: string, otp: string): Promise<vo
 }
 
 export async function sendInvitationEmail(toEmail: string, rawToken: string) {
-  const link = `${config.APP_BASE_URL}/auth/accept-invitation?token=${rawToken}`;
+  const link = `${config.FRONTEND_URL}/accept-invitation?token=${rawToken}`;
   await transporter.sendMail({
     to: toEmail,
     subject: 'You have been invited to join a company workspace',
