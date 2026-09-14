@@ -36,7 +36,12 @@ export default function AcceptInvitationPage() {
       })
 
       if (!response.ok) {
-        setError(await readApiError(response))
+        setError(
+          await readApiError(
+            response,
+            'This invitation is no longer valid. Please request a new invitation.',
+          ),
+        )
         return
       }
 

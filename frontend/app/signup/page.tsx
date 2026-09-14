@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { readApiError } from '@/lib/api';
 
 type AccountRole = 'applicant' | 'recruiter';
 
@@ -46,12 +47,9 @@ export default function SignupPage() {
       });
 
       if (!response.ok) {
-        const data = await response.json().catch(() => null);
-
         setError(
-          data?.error?.message || 'Unable to create your account.',
+          await readApiError(response, 'Unable to create your account.'),
         );
-
         return;
       }
 

@@ -3,31 +3,7 @@
 import { FormEvent, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-
-function readError(payload: unknown, fallback: string) {
-  if (
-    typeof payload === 'object' &&
-    payload !== null &&
-    'error' in payload
-  ) {
-    const error = (payload as { error?: unknown }).error;
-
-    if (typeof error === 'string') {
-      return error;
-    }
-
-    if (
-      typeof error === 'object' &&
-      error !== null &&
-      'message' in error &&
-      typeof (error as { message?: unknown }).message === 'string'
-    ) {
-      return (error as { message: string }).message;
-    }
-  }
-
-  return fallback;
-}
+import { readApiError } from '@/lib/api';
 
 export default function VerifyEmailPage() {
   const router = useRouter();
@@ -75,20 +51,10 @@ export default function VerifyEmailPage() {
         }),
       });
 
-      const text = await response.text();
-
-      let payload: unknown = null;
-
-      try {
-        payload = text ? JSON.parse(text) : null;
-      } catch {
-        payload = null;
-      }
-
       if (!response.ok) {
         setError(
-          readError(
-            payload,
+          await readApiError(
+            response,
             'We could not verify your email. Check the code and try again.',
           ),
         );
@@ -131,20 +97,10 @@ export default function VerifyEmailPage() {
         }),
       });
 
-      const text = await response.text();
-
-      let payload: unknown = null;
-
-      try {
-        payload = text ? JSON.parse(text) : null;
-      } catch {
-        payload = null;
-      }
-
       if (!response.ok) {
         setError(
-          readError(
-            payload,
+          await readApiError(
+            response,
             'We could not resend the verification code. Please try again.',
           ),
         );

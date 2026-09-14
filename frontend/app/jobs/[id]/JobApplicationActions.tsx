@@ -61,7 +61,7 @@ export default function JobApplicationActions({
     setMessage(
       response.ok
         ? 'Application submitted.'
-        : await readApiError(response),
+        : await readApiError(response, 'Unable to submit your application.'),
     );
 
     setBusy(false);
@@ -79,7 +79,7 @@ export default function JobApplicationActions({
     setMessage(
       response.ok
         ? 'Added to your shortlist.'
-        : await readApiError(response),
+        : await readApiError(response, 'Unable to add the job to your shortlist.'),
     );
 
     setBusy(false);

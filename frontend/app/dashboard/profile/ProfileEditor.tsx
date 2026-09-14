@@ -24,7 +24,11 @@ export default function ProfileEditor({ profile }: { profile: { headline?: strin
         body: JSON.stringify({ headline, bio, skills: skills.split(',').map((value) => value.trim()).filter(Boolean) }),
       });
     }
-    setMessage(response.ok ? 'Profile saved.' : await readApiError(response));
+    setMessage(
+      response.ok
+        ? 'Profile saved.'
+        : await readApiError(response, 'Unable to save your profile.'),
+    );
     setBusy(false);
   }
 

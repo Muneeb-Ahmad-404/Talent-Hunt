@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { readApiError } from '@/lib/api';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('owner@example.com');
@@ -24,8 +25,7 @@ export default function LoginPage() {
       });
 
       if (!res.ok) {
-        const data = await res.json().catch(() => null);
-        setError(data?.error?.message || 'Login failed.');
+        setError(await readApiError(res, 'Invalid email or password.'));
         return;
       }
 

@@ -1,14 +1,34 @@
-export async function readApiError(response: Response): Promise<string> {
+export async function readApiError(
+  response: Response,
+  fallback = 'Request failed. Please try again.',
+): Promise<string> {
   try {
     const data = await response.json();
-    return (
-      data?.error?.message ??
-      data?.message ??
-      data?.error ??
-      'Request failed'
-    );
+    const error = data?.error;
+
+    if (
+      error?.code === 'VALIDATION_ERROR' &&
+      Array.isArray(error.details)
+    ) {
+      const messages = error.details
+        .map((detail: unknown) =>
+          typeof detail === 'object' &&
+          detail !== null &&
+          'message' in detail &&
+          typeof detail.message === 'string'
+            ? detail.message
+            : null,
+        )
+        .filter((message: string | null): message is string => message !== null);
+
+      if (messages.length > 0) {
+        return messages.join(' ');
+      }
+    }
+
+    return fallback;
   } catch {
-    return response.statusText || 'Request failed';
+    return fallback;
   }
 }
 
