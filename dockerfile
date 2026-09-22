@@ -18,4 +18,6 @@ COPY .env.production ./.env
 
 ENV NODE_ENV=production
 EXPOSE 3000
-CMD ["node", "dist/server.js"]
+
+# Execute migrations first, then start the Node API
+CMD ["sh", "-c", "npm run migrate && node dist/server.js"]
