@@ -14,7 +14,7 @@ RUN npm ci --omit=dev
 RUN npm install -g tsx
 COPY --from=builder /app/dist ./dist
 COPY migrations ./migrations
-COPY .env.production ./.env
+# COPY .env.production ./.env
 
 ENV NODE_ENV=production
 EXPOSE 3000
