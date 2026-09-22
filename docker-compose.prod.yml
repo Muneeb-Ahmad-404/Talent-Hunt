@@ -1,16 +1,4 @@
 services:
-  postgres:
-    image: postgres:16-alpine
-    environment:
-      POSTGRES_DB: talenthunt
-      POSTGRES_USER: talent
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-    volumes:
-      - pgdata:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U talent"]
-      interval: 5s
-      retries: 5
 
   redis:
     image: redis:7-alpine
@@ -74,5 +62,4 @@ services:
       - api
 
 volumes:
-  pgdata:
   redisdata:
