@@ -62,7 +62,7 @@ export default async function ApplicantDashboard() {
       />
 
       <div className="grid gap-4 sm:grid-cols-3">
-        <Link href="/dashboard/applications" className="group">
+        <Link href="/dashboard/my-applications" className="group">
           <Card className="h-full p-5 transition-shadow group-hover:shadow-md">
             <div className="flex items-start justify-between gap-4">
               <p className="text-sm font-medium text-slate-500">
